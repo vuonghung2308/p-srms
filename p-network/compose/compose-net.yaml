@@ -1,0 +1,77 @@
+version: '3.7'
+
+volumes:
+  orderer.example.com:
+  peer0.org1.example.com:
+  peer0.org2.example.com:
+
+networks:
+  node-network:
+    name: node-network
+
+services:
+
+  orderer.example.com:
+    container_name: orderer.example.com
+    image: hyperledger/fabric-orderer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - FABRIC_CFG_PATH=/var/hyperledger/orderercfg
+    working_dir: /root
+    command: orderer
+    volumes:
+      - ../organizations/ordererOrgs/example.com/orderers/orderer.example.com:/var/hyperledger/orderer
+      - ../config/orderer/orderer.yaml:/var/hyperledger/orderercfg/orderer.yaml
+      - orderer.example.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+      - 7053:7053
+      - 9443:9443
+    networks:
+      - node-network
+
+  peer0.org1.example.com:
+    container_name: peer0.org1.example.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
+    volumes:
+      - ../organizations/peerOrgs/org1.example.com/peers/peer0.org1.example.com:/etc/hyperledger/peer
+      - ../config/peer0/core.yaml:/etc/hyperledger/peercfg/core.yaml
+      - peer0.org1.example.com:/var/hyperledger/production
+      - ${DOCKER_SOCK}:/host/var/run/docker.sock
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 7051:7051
+      - 9444:9444
+    networks:
+      - node-network
+    
+  peer0.org2.example.com:
+    container_name: peer0.org2.example.com
+    image: hyperledger/fabric-peer:latest
+    labels:
+      service: hyperledger-fabric
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
+    volumes:
+      - ../organizations/peerOrgs/org2.example.com/peers/peer0.org2.example.com:/etc/hyperledger/peer
+      - ../config/peer1/core.yaml:/etc/hyperledger/peercfg/core.yaml
+      - peer0.org2.example.com:/var/hyperledger/production
+      - ${DOCKER_SOCK}:/host/var/run/docker.sock
+    working_dir: /root
+    command: peer node start
+    ports:
+      - 9051:9051
+      - 9445:9445
+    networks:
+      - node-network

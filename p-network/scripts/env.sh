@@ -1,0 +1,8 @@
+#!/bin/bash
+
+NEWORK_DIR=$PWD/..
+WORKING_DIR=$PWD/../..
+FABRIC_DIR=$WORKING_DIR/fabric-binary
+COMPOSE_DIR=$NEWORK_DIR/compose
+
+export PATH=$PATH:$FABRIC_DIR/bin

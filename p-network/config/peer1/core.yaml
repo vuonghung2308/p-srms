@@ -1,0 +1,46 @@
+peer:
+    id: peer0.org2.example.com
+    networkId: dev
+    listenAddress: 0.0.0.0:9051
+    address: 0.0.0.0:9051
+
+    chaincodeAddress: peer0.org2.example.com:9052
+    chaincodeListenAddress: 0.0.0.0:9052
+
+    mspConfigPath: /etc/hyperledger/peer/msp
+    localMspId: Org2MSP
+
+    fileSystemPath: /var/hyperledger/production
+
+    tls:
+        enabled:  true
+        clientAuthRequired: false
+        cert:
+            file: /etc/hyperledger/peer/tls/sign-cert.pem
+        key:
+            file: /etc/hyperledger/peer/tls/pr-key.pem
+        rootcert:
+            file: /etc/hyperledger/peer/tls/ca-cert.pem
+
+    gossip:
+        bootstrap: peer0.org2.example.com:9051
+        externalEndpoint: peer0.org2.example.com:9051
+        endpoint: peer0.org2.example.com:9051
+
+    profile:
+        enabled:     false
+
+operations:
+    listenAddress: peer0.org2.example.com:9445
+
+metrics:
+    provider: prometheus
+
+snapshots:
+    rootDir: /var/hyperledger/production/snapshots
+
+vm:
+    endpoint: unix:///host/var/run/docker.sock
+    docker:
+        hostConfig:
+            NetworkMode: fabric_test

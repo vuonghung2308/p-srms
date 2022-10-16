@@ -1,0 +1,42 @@
+General:
+  ListenAddress: 0.0.0.0
+  ListenPort: 7050
+  LocalMSPID: OrdererMSP
+  LocalMSPDir: /var/hyperledger/orderer/msp
+
+  TLS:
+      Enabled: true
+      PrivateKey: /var/hyperledger/orderer/tls/pr-key.pem
+      Certificate: /var/hyperledger/orderer/tls/sign-cert.pem
+      RootCAs:
+        - /var/hyperledger/orderer/tls/ca-cert.pem
+
+  Cluster:
+      ClientPrivateKey: /var/hyperledger/orderer/tls/pr-key.pem
+      ClientCertificate: /var/hyperledger/orderer/tls/sign-cert.pem
+      RootCAs:
+        - /var/hyperledger/orderer/tls/ca-cert.pem
+  
+  BootstrapMethod: none
+
+ChannelParticipation:
+    Enabled: true
+
+Admin:
+    ListenAddress: 0.0.0.0:7053
+
+    TLS:
+        Enabled: true
+        PrivateKey: /var/hyperledger/orderer/tls/pr-key.pem
+        Certificate: /var/hyperledger/orderer/tls/sign-cert.pem
+        ClientAuthRequired: true
+        ClientRootCAs: 
+          - /var/hyperledger/orderer/tls/ca-cert.pem
+        RootCAs:
+          - /var/hyperledger/orderer/tls/ca-cert.pem
+
+Operations:
+    ListenAddress: 0.0.0.0:9443
+
+Metrics:
+    Provider: prometheus
