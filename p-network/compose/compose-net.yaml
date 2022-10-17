@@ -40,10 +40,9 @@ services:
     environment:
       - FABRIC_LOGGING_SPEC=INFO
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
-      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
     volumes:
       - ../organizations/peerOrgs/org1.example.com/peers/peer0.org1.example.com:/etc/hyperledger/peer
-      - ../config/peer0/core.yaml:/etc/hyperledger/peercfg/core.yaml
+      - ../config/peer/peer0/core.yaml:/etc/hyperledger/peercfg/core.yaml
       - peer0.org1.example.com:/var/hyperledger/production
       - ${DOCKER_SOCK}:/host/var/run/docker.sock
     working_dir: /root
@@ -65,7 +64,7 @@ services:
       - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
     volumes:
       - ../organizations/peerOrgs/org2.example.com/peers/peer0.org2.example.com:/etc/hyperledger/peer
-      - ../config/peer1/core.yaml:/etc/hyperledger/peercfg/core.yaml
+      - ../config/peer/peer1/core.yaml:/etc/hyperledger/peercfg/core.yaml
       - peer0.org2.example.com:/var/hyperledger/production
       - ${DOCKER_SOCK}:/host/var/run/docker.sock
     working_dir: /root
@@ -73,5 +72,28 @@ services:
     ports:
       - 9051:9051
       - 9445:9445
+    networks:
+      - node-network
+
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools:latest
+    labels:
+      service: hyperledger-fabric
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - FABRIC_LOGGING_SPEC=INFO
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+    working_dir: /root
+    command: /bin/bash
+    volumes:
+      - ../config/peer/core.yaml:/etc/hyperledger/peercfg/core.yaml
+      - ../organizations:/etc/hyperledger/organizations
+      - ../scripts/set.sh:/root/scripts/set.sh
+    depends_on:
+      - peer0.org1.example.com
+      - peer0.org2.example.com
     networks:
       - node-network

@@ -21,6 +21,7 @@ General:
 
 ChannelParticipation:
     Enabled: true
+    MaxRequestBodySize: 1 MB
 
 Admin:
     ListenAddress: 0.0.0.0:7053
@@ -36,7 +37,7 @@ Admin:
           - /var/hyperledger/orderer/tls/ca-cert.pem
 
 Operations:
-    ListenAddress: 0.0.0.0:9443
+    ListenAddress: orderer.example.com:9443
 
 Metrics:
     Provider: prometheus
