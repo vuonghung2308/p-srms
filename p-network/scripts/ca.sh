@@ -17,8 +17,9 @@ function generateOrderOrgIdentities() {
     local ORDERER_HOME=$NEWORK_DIR/organizations/ordererOrgs/example.com
     local ORDERER_NODE=$ORDERER_HOME/orderers/orderer.example.com
     local CERT_FILE=$ORDERER_HOME/ca-cert.pem
-    mkdir $ORDERER_HOME -p
+    mkdir $ORDERER_HOME/msp/tlscacerts -p
     cp $FABRIC_CA_DIR/ordererOrg/ca-cert.pem $CERT_FILE
+    cp $CERT_FILE $ORDERER_HOME/msp/tlscacerts/ca-cert.pem
 
     fabric-ca-client enroll -u https://admin:adminpw@localhost:9054 \
         --caname ca-orderer --tls.certfiles $CERT_FILE --home $ORDERER_HOME
@@ -56,6 +57,7 @@ function generateOrderOrgIdentities() {
     OrdererOUIdentifier:
         Certificate: cacerts/localhost-9054-ca-orderer.pem
         OrganizationalUnitIdentifier: orderer' > $MSP_CONFIG_FILE
+    cp $MSP_CONFIG_FILE $ORDERER_HOME/msp/config.yaml
 }
 
 function generateOrg1Identities() {
@@ -68,9 +70,11 @@ function generateOrg1Identities() {
     fabric-ca-client enroll -u https://admin:adminpw@localhost:7054 \
         --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME
 
-    fabric-ca-client register -u https://admin:adminpw@localhost:7054 \
-        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME \
-        --id.name peer0 --id.secret peer0pw --id.type peer
+    fabric-ca-client register --id.name peer0 --id.secret peer0pw --id.type peer \
+        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME
+        
+    fabric-ca-client register --id.name org1admin --id.secret org1adminpw --id.type admin \
+        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME
 
     fabric-ca-client enroll -u https://peer0:peer0pw@localhost:7054 \
         --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME \
@@ -81,6 +85,10 @@ function generateOrg1Identities() {
         --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME \
         --mspdir $ORG1_NODE/tls --enrollment.profile tls \
         --csr.hosts peer0.org1.example.com --csr.hosts localhost
+
+    fabric-ca-client enroll -u https://org1admin:org1adminpw@localhost:7054 \
+        --caname ca-org1 -M $ORG1_HOME/users/Admin@org1.example.com/msp \
+        --tls.certfiles $CERT_FILE --home $ORG1_HOME
 
     cp $ORG1_NODE/tls/tlscacerts/* $ORG1_NODE/tls/ca-cert.pem
     cp $ORG1_NODE/tls/signcerts/* $ORG1_NODE/tls/sign-cert.pem
@@ -101,6 +109,8 @@ function generateOrg1Identities() {
     OrdererOUIdentifier:
         Certificate: cacerts/localhost-7054-ca-org1.pem
         OrganizationalUnitIdentifier: orderer' > $MSP_CONFIG_FILE
+    cp $MSP_CONFIG_FILE $ORG1_HOME/users/Admin@org1.example.com/msp
+    cp $MSP_CONFIG_FILE $ORG1_HOME/msp/config.yaml
 }
 
 function generateOrg2Identities() {
@@ -146,6 +156,7 @@ function generateOrg2Identities() {
     OrdererOUIdentifier:
         Certificate: cacerts/localhost-8054-ca-org2.pem
         OrganizationalUnitIdentifier: orderer' > $MSP_CONFIG_FILE
+    cp $MSP_CONFIG_FILE $ORG2_HOME/msp/config.yaml
 }
 
 function generate() {

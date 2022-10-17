@@ -10,7 +10,7 @@ function start() {
 }
 
 function stop() {
-    DOCKER_SOCK=$DOCKER_SOCK docker-compose -p net -f \
+    DOCKER_SOCK=$DOCKER_SOCK docker-compose -p net. -f \
         $COMPOSE_DIR/compose-net.yaml down --volumes
 }
 
