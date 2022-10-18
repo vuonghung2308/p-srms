@@ -40,6 +40,7 @@ services:
     environment:
       - FABRIC_LOGGING_SPEC=INFO
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org1"}
     volumes:
       - ../organizations/peerOrgs/org1.example.com/peers/peer0.org1.example.com:/etc/hyperledger/peer
       - ../config/peer/peer0/core.yaml:/etc/hyperledger/peercfg/core.yaml
@@ -85,11 +86,11 @@ services:
     environment:
       - GOPATH=/opt/gopath
       - FABRIC_LOGGING_SPEC=INFO
-      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
     working_dir: /root
     command: /bin/bash
     volumes:
-      - ../config/peer/core.yaml:/etc/hyperledger/peercfg/core.yaml
+      - ../config/peer/peer0/core.yaml:/etc/hyperledger/peer0cfg/core.yaml
+      - ../config/peer/peer1/core.yaml:/etc/hyperledger/peer1cfg/core.yaml
       - ../organizations:/etc/hyperledger/organizations
       - ../scripts/set.sh:/root/scripts/set.sh
     depends_on:

@@ -21,27 +21,37 @@ function createChannel() {
 }
 
 function joinPeer0ToChannel() {
-    local PEER0_DIR=$NEWORK_DIR/organizations/peerOrgs/org1.example.com
-    export FABRIC_CFG_PATH=$NEWORK_DIR/config/peer
+    local ORG1_DIR=$NEWORK_DIR/organizations/peerOrgs/org1.example.com
+    export FABRIC_CFG_PATH=$NEWORK_DIR/config/peer/peer0
     export CORE_PEER_LOCALMSPID="Org1MSP"
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_DIR/ca-cert.pem
-    export CORE_PEER_MSPCONFIGPATH=$PEER0_DIR/users/Admin@org1.example.com/msp
+    export CORE_PEER_TLS_ROOTCERT_FILE=$ORG1_DIR/ca-cert.pem
+    export CORE_PEER_MSPCONFIGPATH=$ORG1_DIR/users/Admin@org1.example.com/msp
     export CORE_PEER_ADDRESS=localhost:7051
-
-    # peer channel join --blockpath $BLOCK_FILE
-    
-    peer channel list
+    peer channel join --blockpath $BLOCK_FILE
 }
 
-# function setAnchorPeer() {
-#     # export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
-# }
+function joinPeer1ToChannel() {
+    local ORG2_DIR=$NEWORK_DIR/organizations/peerOrgs/org2.example.com
+    export FABRIC_CFG_PATH=$NEWORK_DIR/config/peer/peer1
+    export CORE_PEER_LOCALMSPID="Org2MSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE=$ORG2_DIR/ca-cert.pem
+    export CORE_PEER_MSPCONFIGPATH=$ORG2_DIR/users/Admin@org2.example.com/msp
+    export CORE_PEER_ADDRESS=localhost:9051
+    peer channel join --blockpath $BLOCK_FILE
+}
 
-# createChannel
-joinPeer0ToChannel
-# peer channel list
-
-docker exec cli ./scripts/set.sh 1 $CHANNEL_NAME
-# docker exec cli setAnchorPeer 1 $CHANNEL_NAME
-
-# peer channel getinfo -c mychannel
+if [ $# -eq 0 ]; then
+    exit 0
+else
+    if [ $1 = create ]; then
+        createChannel
+    elif [ $1 = join ]; then
+        joinPeer0ToChannel
+        joinPeer1ToChannel
+    elif [ $1 = setAnchor ]; then
+        docker exec cli ./scripts/set.sh 1
+        docker exec cli ./scripts/set.sh 2
+    else
+        exit 0
+    fi
+fi

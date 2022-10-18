@@ -1,4 +1,0 @@
-peer:
-    networkId: dev
-    tls:
-        enabled:  true

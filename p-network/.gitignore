@@ -2,3 +2,4 @@ fabric-ca
 organizations/ordererOrgs
 organizations/peerOrgs
 channel-artifacts
+*.tar.gz
