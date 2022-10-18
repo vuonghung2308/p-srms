@@ -1,0 +1,35 @@
+{
+  "name": "gateway-app",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "npx tsc && node . | pino-pretty",
+    "enroll": "rm wallet -rf && npx tsc && node dist/identity/admin.js"
+  },
+  "author": "Manh Hung",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "exceljs": "^4.3.0",
+    "express": "^4.18.1",
+    "express-validator": "^6.14.2",
+    "fabric-ca-client": "^2.2.15",
+    "fabric-network": "^2.2.15",
+    "http-status-codes": "^2.2.0",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^8.5.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.14",
+    "@types/jsonwebtoken": "^8.5.9",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^18.7.16",
+    "@types/pino": "^7.0.5",
+    "pino-pretty": "^9.1.0",
+    "typescript": "^4.8.3"
+  }
+}

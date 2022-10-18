@@ -1,8 +1,6 @@
 #!/bin/bash
 . $PWD/env.sh
 
-FABRIC_CA_DIR=$NEWORK_DIR/fabric-ca
-
 function start() {
     docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml up -d
 }
@@ -10,11 +8,13 @@ function start() {
 function stop() {
     docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml \
         down --volumes
-    sudo rm -rf $FABRIC_CA_DIR $NEWORK_DIR/organizations
+    rm -rf $ORGANIZATIONS_DIR/ordererOrgs
+    rm -rf $ORGANIZATIONS_DIR/peerOrgs
+    sudo rm -rf $FABRIC_CA_DIR
 }
 
 function generateOrderOrgIdentities() {
-    local ORDERER_HOME=$NEWORK_DIR/organizations/ordererOrgs/example.com
+    local ORDERER_HOME=$ORGANIZATIONS_DIR/ordererOrgs/example.com
     local ORDERER_NODE=$ORDERER_HOME/orderers/orderer.example.com
     local CERT_FILE=$ORDERER_HOME/ca-cert.pem
     mkdir $ORDERER_HOME/msp/tlscacerts -p
@@ -61,7 +61,7 @@ function generateOrderOrgIdentities() {
 }
 
 function generateOrg1Identities() {
-    local ORG1_HOME=$NEWORK_DIR/organizations/peerOrgs/org1.example.com
+    local ORG1_HOME=$ORGANIZATIONS_DIR/peerOrgs/org1.example.com
     local ORG1_NODE=$ORG1_HOME/peers/peer0.org1.example.com
     local CERT_FILE=$ORG1_HOME/ca-cert.pem
     mkdir $ORG1_HOME/msp/tlscacerts -p
@@ -112,10 +112,13 @@ function generateOrg1Identities() {
         OrganizationalUnitIdentifier: orderer' > $MSP_CONFIG_FILE
     cp $MSP_CONFIG_FILE $ORG1_HOME/users/Admin@org1.example.com/msp
     cp $MSP_CONFIG_FILE $ORG1_HOME/msp/config.yaml
+    
+    CCP_FILE=$ORG1_HOME/connection.json
+    echo "$(json_ccp 1 7051 7054 $CERT_FILE $CERT_FILE)" > $CCP_FILE
 }
 
 function generateOrg2Identities() {
-    local ORG2_HOME=$NEWORK_DIR/organizations/peerOrgs/org2.example.com
+    local ORG2_HOME=$ORGANIZATIONS_DIR/peerOrgs/org2.example.com
     local ORG2_NODE=$ORG2_HOME/peers/peer0.org2.example.com
     local CERT_FILE=$ORG2_HOME/ca-cert.pem
     mkdir $ORG2_HOME/msp/tlscacerts -p
@@ -166,6 +169,9 @@ function generateOrg2Identities() {
         OrganizationalUnitIdentifier: orderer' > $MSP_CONFIG_FILE
     cp $MSP_CONFIG_FILE $ORG2_HOME/users/Admin@org2.example.com/msp
     cp $MSP_CONFIG_FILE $ORG2_HOME/msp/config.yaml
+    
+    CCP_FILE=$ORG2_HOME/connection.json
+    echo "$(json_ccp 2 9051 8054 $CERT_FILE $CERT_FILE)" > $CCP_FILE
 }
 
 function generate() {
@@ -174,6 +180,20 @@ function generate() {
     generateOrg2Identities
 }
 
+function one_line_pem {
+    echo "`awk 'NF {sub(/\\n/, ""); printf "%s\\\\\\\n",$0;}' $1`"
+}
+
+function json_ccp {
+    local PP=$(one_line_pem $4)
+    local CP=$(one_line_pem $5)
+    sed -e "s/\${ORG}/$1/" \
+        -e "s/\${P0PORT}/$2/" \
+        -e "s/\${CAPORT}/$3/" \
+        -e "s#\${PEERPEM}#$PP#" \
+        -e "s#\${CAPEM}#$CP#" \
+        $ORGANIZATIONS_DIR/ccp-tmp.json
+}
 
 if [ $# -eq 0 ]; then
     exit 0
