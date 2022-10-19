@@ -1,6 +1,6 @@
-# STUDENT POINT - BLOCKCHAIN PROJECT
+# P-SRMS - BLOCKCHAIN PROJECT
 ## Directory structure
 - [**chaincode**](chaincode) contain Hyperledger Fabric chaincode
 - [**client-app**](client-app) contain source code of web application with React
 - [**gateway-app**](gateway-app) contain source code of RESTful API with Express
-- [**script**](script) contain scripts to bring Fabric network up
+- [**network**](network) contain docker compose files, network configuration file and some scripts to bring network up
