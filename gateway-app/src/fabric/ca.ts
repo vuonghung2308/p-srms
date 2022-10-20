@@ -47,7 +47,7 @@ export const enrollIdentity = async (
 }
 
 export const registerUser = async (
-    caClient: FabricCAServices, wallet: Wallet, userId: string,
+    caClient: FabricCAServices, wallet: Wallet, userId: string, secret: string,
     affiliation: string, adminUserId: string): Promise<string | null> => {
     try {
         const userIdentity = await wallet.get(userId);
@@ -66,8 +66,9 @@ export const registerUser = async (
         const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
         const adminUser = await provider.getUserContext(adminIdentity, adminUserId);
 
-        const secret = await caClient.register({
+        await caClient.register({
             affiliation: affiliation,
+            enrollmentSecret: secret,
             enrollmentID: userId,
             role: 'client'
         }, adminUser);

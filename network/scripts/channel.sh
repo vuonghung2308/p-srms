@@ -43,15 +43,20 @@ function joinPeer1ToChannel() {
 if [ $# -eq 0 ]; then
     exit 0
 else
-    if [ $1 = create ]; then
-        createChannel
-    elif [ $1 = join ]; then
-        joinPeer0ToChannel
-        joinPeer1ToChannel
-    elif [ $1 = setAnchor ]; then
-        docker exec cli ./scripts/set.sh 1
-        docker exec cli ./scripts/set.sh 2
-    else
-        exit 0
+    NUM_CA_CONTAINER=$(docker ps | grep -e 'example.com\|cli' |wc -l)
+    if [ $NUM_CA_CONTAINER -ge 4 ]; then
+        if [ $1 = create ]; then
+            createChannel
+        elif [ $1 = join ]; then
+            joinPeer0ToChannel
+            joinPeer1ToChannel
+        elif [ $1 = setAnchor ]; then
+            docker exec cli ./scripts/set.sh 1
+            docker exec cli ./scripts/set.sh 2
+        else 
+            exit 0 
+        fi
+    else 
+        echo "Network nodes are not running" 
     fi
 fi

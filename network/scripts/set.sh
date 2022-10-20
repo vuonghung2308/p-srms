@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 ORGS_DIR=/etc/hyperledger/organizations
 ORG1_DIR=$ORGS_DIR/peerOrgs/org1.example.com
 ORG2_DIR=$ORGS_DIR/peerOrgs/org2.example.com
@@ -9,8 +8,7 @@ CHANNEL=mychannel
 
 function setAnchor1() {
     HOST=peer0.org1.example.com
-    PORT=7051
-    ORG=1
+    PORT=7051 && ORG=1
 
     export FABRIC_CFG_PATH=/etc/hyperledger/peer0cfg
     export CORE_PEER_LOCALMSPID="Org1MSP"
@@ -25,23 +23,31 @@ function setAnchor1() {
     configtxlator proto_decode --input config_block.pb --type common.Block \
         --output config_block.json
 
-    jq .data.data[0].payload.data.config config_block.json > ${CORE_PEER_LOCALMSPID}config.json
-    jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' ${CORE_PEER_LOCALMSPID}config.json > ${CORE_PEER_LOCALMSPID}modified_config.json
+    jq .data.data[0].payload.data.config config_block.json \
+         > ${CORE_PEER_LOCALMSPID}config.json
+    jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' \
+        ${CORE_PEER_LOCALMSPID}config.json > ${CORE_PEER_LOCALMSPID}modified_config.json
 
-    configtxlator proto_encode --input ${CORE_PEER_LOCALMSPID}config.json --type common.Config --output original_config.pb
-    configtxlator proto_encode --input  ${CORE_PEER_LOCALMSPID}modified_config.json --type common.Config --output modified_config.pb
-    configtxlator compute_update --channel_id ${CHANNEL} --original original_config.pb --updated modified_config.pb --output config_update.pb
-    configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate --output config_update.json
-    echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL'", "type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' | jq . > config_update_in_envelope.json
-    configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output  ${CORE_PEER_LOCALMSPID}anchors.tx
+    configtxlator proto_encode --input ${CORE_PEER_LOCALMSPID}config.json \
+        --type common.Config --output original_config.pb
+    configtxlator proto_encode --input  ${CORE_PEER_LOCALMSPID}modified_config.json \
+        --type common.Config --output modified_config.pb
+    configtxlator compute_update --channel_id ${CHANNEL} --original original_config.pb \
+        --updated modified_config.pb --output config_update.pb
+    configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate \
+        --output config_update.json
+    echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL'", "type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' |\
+        jq . > config_update_in_envelope.json
+    configtxlator proto_encode --input config_update_in_envelope.json \
+        --type common.Envelope --output  ${CORE_PEER_LOCALMSPID}anchors.tx
 
-    peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile $ORDERER_CA
+    peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL \
+        -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile $ORDERER_CA
 }
 
 function setAnchor2() {
     HOST=peer0.org2.example.com
-    PORT=9051
-    ORG=2
+    PORT=9051 && ORG=2
 
     export FABRIC_CFG_PATH=/etc/hyperledger/peer1cfg
     export CORE_PEER_LOCALMSPID="Org2MSP"
@@ -59,19 +65,26 @@ function setAnchor2() {
 
     jq .data.data[0].payload.data.config config_block.json > ${CORE_PEER_LOCALMSPID}config.json
 
-    jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' ${CORE_PEER_LOCALMSPID}config.json > ${CORE_PEER_LOCALMSPID}modified_config.json
+    jq '.channel_group.groups.Application.groups.'${CORE_PEER_LOCALMSPID}'.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "'$HOST'","port": '$PORT'}]},"version": "0"}}' \
+        ${CORE_PEER_LOCALMSPID}config.json > ${CORE_PEER_LOCALMSPID}modified_config.json
 
-    configtxlator proto_encode --input ${CORE_PEER_LOCALMSPID}config.json --type common.Config --output original_config.pb
-    configtxlator proto_encode --input  ${CORE_PEER_LOCALMSPID}modified_config.json --type common.Config --output modified_config.pb
-    configtxlator compute_update --channel_id ${CHANNEL} --original original_config.pb --updated modified_config.pb --output config_update.pb
-    configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate --output config_update.json
-    echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL'", "type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' | jq . > config_update_in_envelope.json
-    configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output  ${CORE_PEER_LOCALMSPID}anchors.tx
+    configtxlator proto_encode --input ${CORE_PEER_LOCALMSPID}config.json \
+        --type common.Config --output original_config.pb
+    configtxlator proto_encode --input  ${CORE_PEER_LOCALMSPID}modified_config.json \
+        --type common.Config --output modified_config.pb
+    configtxlator compute_update --channel_id ${CHANNEL} --original original_config.pb \
+        --updated modified_config.pb --output config_update.pb
+    configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate \
+        --output config_update.json
 
-    peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com -c $CHANNEL -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile $ORDERER_CA
+    echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL'", "type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' \
+        | jq . > config_update_in_envelope.json
+    configtxlator proto_encode --input config_update_in_envelope.json \
+        --type common.Envelope --output  ${CORE_PEER_LOCALMSPID}anchors.tx
+
+    peer channel update -o orderer.example.com:7050 --ordererTLSHostnameOverride orderer.example.com \
+        -c $CHANNEL -f ${CORE_PEER_LOCALMSPID}anchors.tx --tls --cafile $ORDERER_CA
 }
-
-
 
 if [ $# -eq 0 ]; then
     exit 0

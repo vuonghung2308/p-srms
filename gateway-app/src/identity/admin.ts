@@ -8,13 +8,15 @@ async function main(userId: string, userSecret: string, mspOrg: string) {
     const cpp = fabric.buildCPP(CCP_PATH);
     const client = ca.buildCAClient(cpp, CA_HOSTNAME);
     const wallet = await wl.buildWallet(WALLET_PATH);
-    await ca.enrollIdentity(client, wallet, userId, userSecret, mspOrg);
-    const secret = await ca.registerUser(
-        client, wallet, 'nodeApp',
-        'org1.department1', userId
-    );
-    if (secret) {
-        await ca.enrollIdentity(client, wallet, 'nodeApp', secret, mspOrg);
+    if(await wallet.get('nodeApp')) {
+        await ca.enrollIdentity(client, wallet, userId, userSecret, mspOrg);
+        try {
+            await ca.registerUser(
+                client, wallet, 'secret', 'nodeApp',
+                'org1.department1', userId
+            );
+        } catch (error) { }
+        await ca.enrollIdentity(client, wallet, 'nodeApp', 'secret', mspOrg);
         await wallet.remove(userId);
     }
 }

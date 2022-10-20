@@ -2,15 +2,26 @@
 . $PWD/env.sh
 
 function start() {
-    docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml up -d
+    NUM_CA_CONTAINER=$(docker ps | grep "ca" | wc -l)
+    if [ $NUM_CA_CONTAINER -ne 3 ]; then
+        docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml up -d
+    else
+        echo "CA containers have been already started"
+    fi
 }
 
-function stop() {
-    docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml \
-        down --volumes
-    rm -rf $ORGANIZATIONS_DIR/ordererOrgs
-    rm -rf $ORGANIZATIONS_DIR/peerOrgs
-    sudo rm -rf $FABRIC_CA_DIR
+function stop() {    
+    NUM_CA_CONTAINER=$(docker ps | grep "ca" | wc -l)
+    if [ $NUM_CA_CONTAINER -ne 3 ]; then
+        echo "CA containers are not running"
+    else
+        docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml \
+            down --volumes
+
+        sudo rm -rf $FABRIC_CA_DIR
+        rm -rf $ORGANIZATIONS_DIR/ordererOrgs
+        rm -rf $ORGANIZATIONS_DIR/peerOrgs
+    fi
 }
 
 function generateOrderOrgIdentities() {
@@ -24,9 +35,8 @@ function generateOrderOrgIdentities() {
     fabric-ca-client enroll -u https://admin:adminpw@localhost:9054 \
         --caname ca-orderer --tls.certfiles $CERT_FILE --home $ORDERER_HOME
 
-    fabric-ca-client register -u https://admin:adminpw@localhost:9054 \
-        --caname ca-orderer --tls.certfiles $CERT_FILE --home $ORDERER_HOME \
-        --id.name orderer --id.secret ordererpw --id.type orderer
+    fabric-ca-client register --id.name orderer --id.secret ordererpw --id.type orderer \
+        --caname ca-orderer --tls.certfiles $CERT_FILE --home $ORDERER_HOME &>/dev/null
 
     fabric-ca-client enroll -u https://orderer:ordererpw@localhost:9054 \
         --caname ca-orderer --tls.certfiles $CERT_FILE --home $ORDERER_HOME \
@@ -72,10 +82,10 @@ function generateOrg1Identities() {
         --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME
 
     fabric-ca-client register --id.name peer0 --id.secret peer0pw --id.type peer \
-        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME
+        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME &>/dev/null
         
     fabric-ca-client register --id.name org1admin --id.secret org1adminpw --id.type admin \
-        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME
+        --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME &>/dev/null
 
     fabric-ca-client enroll -u https://peer0:peer0pw@localhost:7054 \
         --caname ca-org1 --tls.certfiles $CERT_FILE --home $ORG1_HOME \
@@ -129,10 +139,10 @@ function generateOrg2Identities() {
         --caname ca-org2 --tls.certfiles $CERT_FILE --home $ORG2_HOME
 
     fabric-ca-client register --id.name peer0 --id.secret peer0pw --id.type peer \
-        --caname ca-org2 --tls.certfiles $CERT_FILE --home $ORG2_HOME \
+        --caname ca-org2 --tls.certfiles $CERT_FILE --home $ORG2_HOME  &>/dev/null
 
     fabric-ca-client register --id.name org2admin --id.secret org2adminpw --id.type admin \
-        --caname ca-org2 --tls.certfiles $CERT_FILE --home $ORG2_HOME
+        --caname ca-org2 --tls.certfiles $CERT_FILE --home $ORG2_HOME &>/dev/null
 
     fabric-ca-client enroll -u https://peer0:peer0pw@localhost:8054 \
         --caname ca-org2 --tls.certfiles $CERT_FILE --home $ORG2_HOME \
@@ -175,9 +185,17 @@ function generateOrg2Identities() {
 }
 
 function generate() {
-    generateOrderOrgIdentities
-    generateOrg1Identities
-    generateOrg2Identities
+    NUM_CA_CONTAINER=$(docker ps | grep "ca" | wc -l)
+    if [ $NUM_CA_CONTAINER -ne 3 ]; then
+        echo "CA containers are not running"
+    else
+        rm -rf $ORGANIZATIONS_DIR/ordererOrgs
+        rm -rf $ORGANIZATIONS_DIR/peerOrgs
+
+        generateOrderOrgIdentities
+        generateOrg1Identities
+        generateOrg2Identities
+    fi
 }
 
 function one_line_pem {
