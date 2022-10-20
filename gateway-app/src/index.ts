@@ -72,7 +72,7 @@ async function main() {
 
     logger.info('Starting REST server');
     app.listen(8000, () => {
-        logger.info('REST server started on port: %d', 3000);
+        logger.info('REST server started on port: %d', 8000);
     });
 }
 

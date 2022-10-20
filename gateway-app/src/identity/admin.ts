@@ -8,11 +8,11 @@ async function main(userId: string, userSecret: string, mspOrg: string) {
     const cpp = fabric.buildCPP(CCP_PATH);
     const client = ca.buildCAClient(cpp, CA_HOSTNAME);
     const wallet = await wl.buildWallet(WALLET_PATH);
-    if(await wallet.get('nodeApp')) {
+    if(!await wallet.get('nodeApp')) {
         await ca.enrollIdentity(client, wallet, userId, userSecret, mspOrg);
         try {
             await ca.registerUser(
-                client, wallet, 'secret', 'nodeApp',
+                client, wallet, 'nodeApp', 'secret',
                 'org1.department1', userId
             );
         } catch (error) { }

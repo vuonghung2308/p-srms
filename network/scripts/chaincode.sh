@@ -70,9 +70,10 @@ function approveForOrg2() {
 }
 
 function commitChaincode() {
-    ORG1_CERT_FILE= $ORGANIZATIONS_DIR/peerOrgs/org1.example.com/peers/peer0.org1.example.com/tls/ca-cert.pem
-    ORG2_CERT_FILE= $ORGANIZATIONS_DIR/peerOrgs/org2.example.com/peers/peer0.org2.example.com/tls/ca-cert.pem
     setOrganization1
+    ORG1_CERT_FILE=$ORG1_DIR/peers/peer0.org1.example.com/tls/ca-cert.pem
+    ORG2_CERT_FILE=$ORG2_DIR/peers/peer0.org2.example.com/tls/ca-cert.pem
+
     peer lifecycle chaincode commit -o localhost:7050 \
         --ordererTLSHostnameOverride orderer.example.com \
         --channelID mychannel --name basic --version 1.0 \
@@ -84,7 +85,7 @@ function commitChaincode() {
         --channelID mychannel --name basic --cafile $CA_FILE
     
     peer chaincode invoke -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com \
-        --tls --cafile $CA_FILE -C mychannel -n basic --peerAddresses localhost:7051 
+        --tls --cafile $CA_FILE -C mychannel -n basic --peerAddresses localhost:7051 \
         --tlsRootCertFiles $ORG1_CERT_FILE --peerAddresses localhost:9051 \
         --tlsRootCertFiles $ORG2_CERT_FILE -c '{"function":"Ledger:InitLedger","Args":[]}'
 }
