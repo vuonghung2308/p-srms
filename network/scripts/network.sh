@@ -10,7 +10,7 @@ function start() {
         -a -d $ORGANIZATIONS_DIR/peerOrgs \
     ]; then
         NUM_CA_CONTAINER=$(docker ps | grep "example.com" | wc -l)
-        if [ $NUM_CA_CONTAINER -ge 3 ]; then
+        if [ $NUM_CA_CONTAINER -ge 5 ]; then
             echo "Network nodes have been already started"
         else
             DOCKER_SOCK=$DOCKER_SOCK docker-compose -p net -f \

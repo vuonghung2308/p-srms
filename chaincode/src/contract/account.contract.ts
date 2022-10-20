@@ -50,4 +50,9 @@ export class AccountContract extends BaseContract {
         );
         return success(info);
     }
+
+    @Transaction()
+    public async ChangePassword(ctx: Context,token: string, newPass: string, oldPass: string): Promise<string> {
+        return success({'abc':'abc' });
+    }
 }

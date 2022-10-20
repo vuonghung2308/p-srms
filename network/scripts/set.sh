@@ -6,6 +6,24 @@ ORG2_DIR=$ORGS_DIR/peerOrgs/org2.example.com
 ORDERER_CA=$ORGS_DIR/ordererOrgs/example.com/ca-cert.pem
 CHANNEL=mychannel
 
+function try() {
+    local RETRY_TIME=${2:-20}
+    local DURATION=${3:-0.1}
+    while : ; do
+        MESSAGE=$($1 2>&1)
+        RESULT=$?
+        if [ $RESULT -eq 0 ]; then
+            break
+        fi
+        RETRY_TIME=$(($RETRY_TIME-1))
+        sleep $DURATION
+        if [ $RETRY_TIME -eq 0 ]; then
+            break
+        fi
+    done
+    echo $MESSAGE
+}
+
 function setAnchor1() {
     HOST=peer0.org1.example.com
     PORT=7051 && ORG=1
@@ -19,6 +37,8 @@ function setAnchor1() {
     peer channel fetch config config_block.pb -o orderer.example.com:7050 \
         --ordererTLSHostnameOverride orderer.example.com \
         --channelID $CHANNEL --tls --cafile $ORDERER_CA
+    
+    [ $? -ne 0 ] && return 1
         
     configtxlator proto_decode --input config_block.pb --type common.Block \
         --output config_block.json
@@ -59,6 +79,8 @@ function setAnchor2() {
     peer channel fetch config config_block.pb -o orderer.example.com:7050 \
         --ordererTLSHostnameOverride orderer.example.com\
         --channelID $CHANNEL --tls --cafile $ORDERER_CA
+    
+    [ $? -ne 0 ] && return 1
         
     configtxlator proto_decode --input config_block.pb --type common.Block \
         --output config_block.json
@@ -90,9 +112,9 @@ if [ $# -eq 0 ]; then
     exit 0
 else
     if [ $1 = 1 ]; then
-        setAnchor1
+        try setAnchor1
     elif [ $1 = 2 ]; then
-        setAnchor2
+        try setAnchor2
     else
         exit 0
     fi

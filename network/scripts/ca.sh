@@ -1,5 +1,6 @@
 #!/bin/bash
 . $PWD/env.sh
+. $PWD/utils.sh
 
 function start() {
     NUM_CA_CONTAINER=$(docker ps | grep "ca" | wc -l)
@@ -29,7 +30,7 @@ function generateOrderOrgIdentities() {
     local ORDERER_NODE=$ORDERER_HOME/orderers/orderer.example.com
     local CERT_FILE=$ORDERER_HOME/ca-cert.pem
     mkdir $ORDERER_HOME/msp/tlscacerts -p
-    cp $FABRIC_CA_DIR/ordererOrg/ca-cert.pem $CERT_FILE
+    try "cp $FABRIC_CA_DIR/ordererOrg/ca-cert.pem $CERT_FILE" 1>/dev/null
     cp $CERT_FILE $ORDERER_HOME/msp/tlscacerts/ca-cert.pem
 
     fabric-ca-client enroll -u https://admin:adminpw@localhost:9054 \
@@ -194,7 +195,7 @@ function generate() {
 
         generateOrderOrgIdentities
         generateOrg1Identities
-        generateOrg2Identities
+        # generateOrg2Identities
     fi
 }
 
@@ -221,6 +222,11 @@ else
     elif [ $1 = stop ]; then
         stop
     elif [ $1 = generate ]; then
+        generate
+    elif [ $1 = generateOrg2 ]; then
+        generateOrg2Identities
+    elif [ $1 = up ]; then
+        start 
         generate
     else
         exit 0

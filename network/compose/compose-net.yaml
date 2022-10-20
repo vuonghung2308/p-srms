@@ -95,6 +95,6 @@ services:
       - ../scripts/set.sh:/root/scripts/set.sh
     depends_on:
       - peer0.org1.example.com
-      - peer0.org2.example.com
+      # - peer0.org2.example.com
     networks:
       - node-network
