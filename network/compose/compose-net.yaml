@@ -53,28 +53,28 @@ services:
       - 9444:9444
     networks:
       - node-network
-    
-  peer0.org2.example.com:
-    container_name: peer0.org2.example.com
-    image: hyperledger/fabric-peer:latest
-    labels:
-      service: hyperledger-fabric
-    environment:
-      - FABRIC_LOGGING_SPEC=INFO
-      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
-      - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
-    volumes:
-      - ../organizations/peerOrgs/org2.example.com/peers/peer0.org2.example.com:/etc/hyperledger/peer
-      - ../config/peer/peer1/core.yaml:/etc/hyperledger/peercfg/core.yaml
-      - peer0.org2.example.com:/var/hyperledger/production
-      - ${DOCKER_SOCK}:/host/var/run/docker.sock
-    working_dir: /root
-    command: peer node start
-    ports:
-      - 9051:9051
-      - 9445:9445
-    networks:
-      - node-network
+
+  # peer0.org2.example.com:
+  #   container_name: peer0.org2.example.com
+  #   image: hyperledger/fabric-peer:latest
+  #   labels:
+  #     service: hyperledger-fabric
+  #   environment:
+  #     - FABRIC_LOGGING_SPEC=INFO
+  #     - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+  #     - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0org2"}
+  #   volumes:
+  #     - ../organizations/peerOrgs/org2.example.com/peers/peer0.org2.example.com:/etc/hyperledger/peer
+  #     - ../config/peer/peer1/core.yaml:/etc/hyperledger/peercfg/core.yaml
+  #     - peer0.org2.example.com:/var/hyperledger/production
+  #     - ${DOCKER_SOCK}:/host/var/run/docker.sock
+  #   working_dir: /root
+  #   command: peer node start
+  #   ports:
+  #     - 9051:9051
+  #     - 9445:9445
+  #   networks:
+  #     - node-network
 
   cli:
     container_name: cli

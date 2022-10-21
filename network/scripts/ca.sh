@@ -185,17 +185,26 @@ function generateOrg2Identities() {
     echo "$(json_ccp 2 9051 8054 $CERT_FILE $CERT_FILE)" > $CCP_FILE
 }
 
-function generate() {
-    NUM_CA_CONTAINER=$(docker ps | grep "ca" | wc -l)
+function generateOrg1() {
+    NUM_CA_CONTAINER=$(docker ps | grep "ca_" | wc -l)
     if [ $NUM_CA_CONTAINER -ne 3 ]; then
         echo "CA containers are not running"
     else
         rm -rf $ORGANIZATIONS_DIR/ordererOrgs
-        rm -rf $ORGANIZATIONS_DIR/peerOrgs
-
+        rm -rf $ORGANIZATIONS_DIR/peerOrgs/org1.example.com
         generateOrderOrgIdentities
         generateOrg1Identities
-        # generateOrg2Identities
+    fi
+}
+
+function generateOrg2() {
+    NUM_CA_CONTAINER=$(docker ps | grep "ca_" | wc -l)
+    echo $NUM_CA_CONTAINER
+    if [ $NUM_CA_CONTAINER -ne 3 ]; then
+        echo "CA containers are not running"
+    else
+        rm -rf $ORGANIZATIONS_DIR/peerOrgs/org2.example.com
+        generateOrg2Identities
     fi
 }
 
@@ -222,12 +231,11 @@ else
     elif [ $1 = stop ]; then
         stop
     elif [ $1 = generate ]; then
-        generate
-    elif [ $1 = generateOrg2 ]; then
-        generateOrg2Identities
+        ORG=${2:-1}
+        [ $ORG -eq 1 ] && generateOrg1 \
+            || generateOrg2
     elif [ $1 = up ]; then
-        start 
-        generate
+        start && generateOrg1
     else
         exit 0
     fi

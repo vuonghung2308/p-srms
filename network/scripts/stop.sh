@@ -1,7 +1,6 @@
 #!/bin/bash
 . ./env.sh
 
-
 SOCK="${DOCKER_HOST:-/var/run/docker.sock}"
 DOCKER_SOCK="${SOCK##unix://}"
 
