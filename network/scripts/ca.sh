@@ -5,7 +5,9 @@
 function start() {
     NUM_CA_CONTAINER=$(docker ps | grep "ca" | wc -l)
     if [ $NUM_CA_CONTAINER -ne 3 ]; then
-        docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml up -d
+        mkdir $FABRIC_CA_DIR/peerOrgs -p
+        U_ID=$UID G_ID=$GID docker-compose -p ca \
+            -f $COMPOSE_DIR/compose-ca.yaml up -d
     else
         echo "CA containers have been already started"
     fi
@@ -198,8 +200,6 @@ function generateOrg1() {
 }
 
 function generateOrg2() {
-    NUM_CA_CONTAINER=$(docker ps | grep "ca_" | wc -l)
-    echo $NUM_CA_CONTAINER
     if [ $NUM_CA_CONTAINER -ne 3 ]; then
         echo "CA containers are not running"
     else
