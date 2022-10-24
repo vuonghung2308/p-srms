@@ -4,7 +4,6 @@ import { BaseContract } from "./contract";
 import * as jwt from "../auth/jwt";
 import * as hash from "../auth/hash"
 import * as ledger from "../ledger/common";
-import { initLedger } from "../data/data";
 import { failed, success } from "../ledger/response";
 
 
@@ -52,7 +51,39 @@ export class AccountContract extends BaseContract {
     }
 
     @Transaction()
-    public async ChangePassword(ctx: Context,token: string, newPass: string, oldPass: string): Promise<string> {
-        return success({'abc':'abc' });
+    public async ChangePassword(
+        ctx: Context, token: string,
+        oldPassword: string,
+        newPassword: string
+    ): Promise<string> {
+        const status = this.setCurrentPayload(
+            jwt.verify(token)
+        );
+        if (status.code !== "OKE") {
+            return failed({
+                code: status.code,
+                param: 'token',
+                msg: status.msg
+            });
+        }
+        const account: Account = await ledger.getState(
+            ctx, this.currentPayload.id, 'ACCOUNT'
+        )
+        if (account.password === await hash.sha256(oldPassword)) {
+            account.password = await hash.sha256(newPassword);
+            account.docType = 'ACCOUNT'
+            await ledger.putState(
+                ctx, this, account.id,
+                account, account.docType
+            );
+            return success();
+        } else {
+            return failed({
+                code: 'NOT_ALLOWED',
+                param: 'oldPassword',
+                msg: "The old password is not correct."
+            })
+        }
+        
     }
 }

@@ -129,7 +129,8 @@ function deployChaincode() {
 function invokeChaincode0() {
     TMP=$1$2
     setOrganization1
-    [ -z "$1$2" ] && ARGS='["Account:CheckAccount","S1", "1"]'
+    [ -z "$1$2" ] && ARGS='["Account:CheckAccount","S1", "1"]' || \
+        ARGS="$1$2"
     peer chaincode query -C $CHANNEL_ID -n $CHAINCODE_NAME \
         -c "{\"Args\":$ARGS}"
 }
@@ -169,6 +170,11 @@ else
             fi
         elif [ $1 = commit ]; then
             commitChaincode
+        elif [ $1 = invoke ]; then
+            ORG=${2:-1}
+            [ $ORG -eq 1 ] \
+                && invokeChaincode0 $3 \
+                || invokeChaincode1 $3
         elif [ $1 = invoke ]; then
             ORG=${2:-1}
             [ $ORG -eq 1 ] \
