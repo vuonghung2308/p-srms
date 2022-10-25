@@ -9,12 +9,14 @@ docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml \
 
 DOCKER_SOCK=$DOCKER_SOCK docker-compose -p net -f \
     $COMPOSE_DIR/compose-net.yaml down --volumes &
+
+docker run --rm -v ${FABRIC_CA_DIR}/../:/app \
+    -w /app busybox rm -rf fabric-ca &
 wait
 
-CHANINCODE_IMAGES=$(docker images | grep dev-peer0 | awk '{print $3}')
+CHANINCODE_IMAGES=$(docker images | grep dev-peer | awk '{print $3}')
 docker rmi -f $CHANINCODE_IMAGES 2>/dev/null
 rm $NEWORK_DIR/basic.tar.gz 2>/dev/null
 rm -rf $NEWORK_DIR/channel-artifacts 2>/dev/null
 rm -rf $ORGANIZATIONS_DIR/ordererOrgs
 rm -rf $ORGANIZATIONS_DIR/peerOrgs
-sudo rm -rf $FABRIC_CA_DIR

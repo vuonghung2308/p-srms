@@ -18,12 +18,15 @@ function stop() {
     if [ $NUM_CA_CONTAINER -ne 3 ]; then
         echo "CA containers are not running"
     else
+        docker run --rm -v ${FABRIC_CA_DIR}/../:/app \
+            -w /app busybox rm -rf fabric-ca &
+
         docker-compose -p ca -f $COMPOSE_DIR/compose-ca.yaml \
             down --volumes
-
-        sudo rm -rf $FABRIC_CA_DIR
+    
         rm -rf $ORGANIZATIONS_DIR/ordererOrgs
         rm -rf $ORGANIZATIONS_DIR/peerOrgs
+        wait
     fi
 }
 

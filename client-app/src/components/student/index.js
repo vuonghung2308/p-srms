@@ -7,7 +7,7 @@ const Content = ({ className }) => {
         <div className={className}>
             <div className="container flex mx-auto px-44 py-2.5">
                 <Link to="/">
-                    <i class="fa-sharp fa-solid fa-house text-gray-500 hover:text-red-dark" />
+                    <i className="fa-sharp fa-solid fa-house text-gray-500 hover:text-red-dark" />
                 </Link>
                 <div className="w-[1px] mx-4 bg-gray-200"></div>
                 <Link className="text-gray-600 font-semibold hover:text-red-dark"

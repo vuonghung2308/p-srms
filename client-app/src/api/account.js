@@ -13,3 +13,10 @@ export async function getInfo() {
         method: 'GET'
     });
 }
+
+export async function changePassword(oldPassword, newPassword) {
+    return fetchJson(`${baseUrl}/auth/change-password`, {
+        body:JSON.stringify({oldPassword, newPassword}),
+        method: 'POST'
+    });
+}

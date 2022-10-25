@@ -4,7 +4,7 @@ import { PayloadDispatchContext } from "../../../common/token";
 import useModal from "../Modal/use";
 import Password from "../Password";
 
-const Header = ({ onButtonPasswordClicked }) => {
+const Header = () => {
     const dispatch = useContext(PayloadDispatchContext);
     const [isHovered, setHovered] = useState(false);
     const { isShowing, toggle } = useModal();
@@ -22,10 +22,12 @@ const Header = ({ onButtonPasswordClicked }) => {
                         <div className="flex text-center">
                             <div>
                                 <Link className="text-gray-600 font-semibold"
-                                    onClick={() => setIsMenuShowing(!isMenuShowing)}
-                                    onBlur={() => setIsMenuShowing(false)}
                                     onMouseEnter={() => setHovered(true)}
-                                    onMouseLeave={() => setHovered(false)}>
+                                    onMouseLeave={() => setHovered(false)}
+                                    onClick={() => setIsMenuShowing(true)}
+                                    onBlur={() => setTimeout(() =>
+                                        setIsMenuShowing(false), 200)
+                                    }>
                                     <i className={`fa-solid fa-user  my-auto mr-3 text-gray-400  ${isHovered && 'text-red-dark'}`} />
                                     <p className={`inline-block ${isHovered && 'text-red-dark'}`}>Tài khoản</p>
                                 </Link>
@@ -37,7 +39,7 @@ const Header = ({ onButtonPasswordClicked }) => {
                                         </Link>
                                         <hr className="mx-2" />
                                         <Link className="block mx-4 my-2 text-gray-500 hover:text-red-dark"
-                                            onMouseDown={() => { setTimeout(toggle, 50) }}>
+                                            onMouseDown={() => { setTimeout(toggle, 200) }}>
                                             Đổi mật khẩu
                                         </Link>
                                         <hr className="mx-2" />
@@ -61,7 +63,12 @@ const Header = ({ onButtonPasswordClicked }) => {
             <hr />
             <Password
                 isShowing={isShowing}
-                toggle={toggle} />
+                toggle={toggle} onSuccess={() => {
+                    toggle()
+                    setTimeout(() => {
+                        alert("Đổi mật khẩu thành công!")
+                    }, 100)
+                }} />
         </>
     );
 }

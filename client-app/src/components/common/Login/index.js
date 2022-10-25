@@ -41,7 +41,7 @@ export default function Login() {
                             username: e.target.value
                         })}
                     />
-                    <i className={`fa-regular fa-user absolute top-[50%] translate-y-[-50%] ml-4 ${isNameFocused ? 'text-red-normal' : 'text-gray-400'}`} />
+                    <i className={`fa-solid fa-user absolute top-[50%] translate-y-[-50%] ml-4 ${isNameFocused ? 'text-red-normal' : 'text-gray-400'}`} />
                 </div>
                 <p className="mt-3">Mật khẩu</p>
                 <div className="relative">
