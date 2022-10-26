@@ -123,7 +123,7 @@ export class ClassContract extends BaseContract {
                         }
                     );
                     const has = points.some(value => value.classId === classId)
-                    if (has === true && cls) {
+                    if (has === true) {
                         return success(cls);
                     } else {
                         return failed({
@@ -137,7 +137,7 @@ export class ClassContract extends BaseContract {
                     return success(cls);
                 }
                 case "TEACHER": {
-                    if (cls && cls["teacher"].id === this.currentPayload.id) {
+                    if (cls["teacher"].id === this.currentPayload.id) {
                         return success(cls);
                     } else {
                         return failed({

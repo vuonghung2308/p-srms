@@ -1,4 +1,5 @@
 import { AccountContract } from './contract/account.contract';
+import { ClaimContract } from './contract/claim.contract';
 import { ClassContract } from './contract/class.contract';
 import { ExamContract } from './contract/exam.contract';
 import { LegerContract } from './contract/ledger.contract';
@@ -14,7 +15,8 @@ export {
     AccountContract, SubjectContract,
     ClassContract, PointContract,
     RoomContract, ExamContract,
-    TeacherContract, LegerContract
+    TeacherContract, LegerContract,
+    ClaimContract
 }
 
 export const contracts: any[] = [
@@ -22,5 +24,6 @@ export const contracts: any[] = [
     TransactionContract, SubjectContract,
     ClassContract, PointContract,
     RoomContract, ExamContract,
-    TeacherContract, LegerContract
+    TeacherContract, LegerContract,
+    ClaimContract
 ];

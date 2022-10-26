@@ -139,7 +139,7 @@ export class ExamContract extends BaseContract {
         const exam: Exam = {
             id: examId, roomId: roomId,
             point: null, code: examCode,
-            censor: null, status: null, note: null
+            status: null, note: null
         };
         point.examId = examId;
         exam.docType = 'EXAM';

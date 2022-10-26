@@ -7,9 +7,9 @@ export class Claim {
     @Property()
     public id: string;
     @Property()
-    public studentId: string;
+    public objectId: string;
     @Property()
-    public censor: string;
+    public studentId: string;
     @Property()
     public time: number;
     @Property()

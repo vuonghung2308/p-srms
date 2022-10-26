@@ -13,8 +13,6 @@ export class Exam {
     @Property()
     public point: number;
     @Property()
-    public censor: string;
-    @Property()
     public status: string;
     @Property()
     public note: string;

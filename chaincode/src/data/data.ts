@@ -68,12 +68,12 @@ const listAccount: Account[] = [
 
 const listClass: Class[] = [
     {
-        id: 'D18-022', subjectId: 'BAS1203', year: 2022, note: null,
-        semester: 'I', teacherId: 'T1', censor: null, status: null
+        id: 'D18-022', subjectId: 'BAS1203', year: 2022,
+        semester: 'I', teacherId: 'T1'
     },
     {
-        id: 'D18-023', subjectId: 'BAS1203', year: 2022, note: null,
-        semester: 'I', teacherId: 'T2', censor: null, status: null
+        id: 'D18-023', subjectId: 'BAS1203', year: 2022,
+        semester: 'I', teacherId: 'T2'
     },
 ];
 
