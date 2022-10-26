@@ -8,11 +8,14 @@ export class Exam {
     public id: string;
     @Property()
     public code: string;
-    // TODO check here
-    @Property()
-    public studentId: string;
     @Property()
     public roomId: string;
     @Property()
     public point: number;
+    @Property()
+    public censor: string;
+    @Property()
+    public status: string;
+    @Property()
+    public note: string;
 }

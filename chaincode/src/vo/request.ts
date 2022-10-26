@@ -1,19 +1,17 @@
 import { Object, Property } from 'fabric-contract-api'
 
 @Object()
-export class Class {
+export class Request {
     @Property()
     public docType?: string;
     @Property()
     public id: string;
     @Property()
-    public subjectId: string;
+    public censor: string;
     @Property()
-    public year: number;
+    public status: string;
     @Property()
-    public semester: string;
+    public note: string;
     @Property()
-    public teacherId: string;
-    @Property()
-    public note?: string;
+    public time: number;
 }

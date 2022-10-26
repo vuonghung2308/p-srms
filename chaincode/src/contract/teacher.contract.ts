@@ -13,7 +13,7 @@ export class TeacherContract extends BaseContract {
     @Transaction(false)
     public async GetTeachers(ctx: Context, token: string): Promise<string> {
         const status = this.setCurrentPayload(
-            jwt.verifyEmployee(token)
+            jwt.verify(token)
         );
         if (status.code !== "OKE") {
             return failed({
@@ -22,8 +22,20 @@ export class TeacherContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const subjects = await ledger.getStates(ctx, "TEACHER");
-        return success(subjects);
+
+        switch (this.currentPayload.type) {
+            case "TEACHER": case "EMPLOYEE": {
+                const subjects = await ledger.getStates(ctx, "TEACHER");
+                return success(subjects);
+            }
+            case "ADMIN": case "STUDENT": default: {
+                return failed({
+                    code: "NOT_ALLOWED",
+                    param: 'token',
+                    msg: "You do not have permission"
+                });
+            }
+        }
     }
 
     @Transaction(false)
@@ -31,7 +43,7 @@ export class TeacherContract extends BaseContract {
         ctx: Context, token: string, key: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
-            jwt.verifyEmployee(token)
+            jwt.verify(token)
         );
         if (status.code !== "OKE") {
             return failed({
@@ -40,15 +52,27 @@ export class TeacherContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const subjects = await ledger.getStates(ctx, "TEACHER");
-        if (key.length === 0) {
-            return success(subjects);
-        } else {
-            const newSubjects = subjects.filter((value: Teacher) => {
-                const str = `${value.id} ${value.name}`.toLowerCase();
-                return str.indexOf(key.toLowerCase()) !== -1;
-            })
-            return success(newSubjects);
+
+        switch (this.currentPayload.type) {
+            case "TEACHER": case "EMPLOYEE": {
+                const subjects = await ledger.getStates(ctx, "TEACHER");
+                if (key.length === 0) {
+                    return success(subjects);
+                } else {
+                    const newSubjects = subjects.filter((value: Teacher) => {
+                        const str = `${value.id} ${value.name}`.toLowerCase();
+                        return str.indexOf(key.toLowerCase()) !== -1;
+                    })
+                    return success(newSubjects);
+                }
+            }
+            case "ADMIN": case "STUDENT": default: {
+                return failed({
+                    code: "NOT_ALLOWED",
+                    param: 'token',
+                    msg: "You do not have permission"
+                });
+            }
         }
     }
 

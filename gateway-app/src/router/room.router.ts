@@ -22,7 +22,21 @@ roomRouter.get(
         }
     }
 );
-
+roomRouter.get(
+    '/:roomId', async (req: Request, res: Response) => {
+        const contract: Contract = req.app.locals.contract;
+        const token: string = req.headers.token as string;
+        const roomId = req.params.roomId as string
+        try {
+            let result = await transaction.evaluate(
+                contract, 'Room:GetRoom', token, roomId
+            );
+            return handleTransactionRes(res, result);
+        } catch (err) {
+            return handleUnknownError(res, err);
+        }
+    }
+);
 roomRouter.put(
     '/create',
     body('roomName', 'must be a string').notEmpty(),

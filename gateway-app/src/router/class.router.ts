@@ -23,6 +23,23 @@ classRouter.get(
     }
 );
 
+classRouter.get(
+    '/:classId', async (req: Request, res: Response) => {
+        const contract: Contract = req.app.locals.contract;
+        const classId = req.params.classId as string;
+        const token: string = req.headers.token as string;
+
+        try {
+            const result = await transaction.submit(
+                contract, 'Class:GetClass', token, classId
+            );
+            return handleTransactionRes(res, result);
+        } catch (error: any) {
+            return handleUnknownError(res, error);
+        }
+    }
+);
+
 classRouter.put(
     '/create',
     body('classId', 'must be a string').notEmpty(),
@@ -107,6 +124,74 @@ classRouter.get(
         try {
             const result = await transaction.evaluate(
                 contract, 'Class:GetStudents',
+                token, classId
+            );
+            return handleTransactionRes(res, result);
+        } catch (error: any) {
+            return handleUnknownError(res, error);
+        }
+    }
+);
+
+classRouter.post(
+    '/request',
+    body('classId', 'must be a string').notEmpty(),
+    body('teacherId', 'must be a string').notEmpty(),
+    async (req: Request, res: Response) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(BAD_REQUEST).json({
+                status: "FAILED",
+                error: {
+                    code: "INVALID",
+                    msg: 'Invalid request body',
+                    detail: errors.array(),
+                },
+                timestamp: new Date().toISOString(),
+            });
+        }
+
+        const contract: Contract = req.app.locals.contract;
+        const classId: string = req.body.classId;
+        const teacherId: string = req.body.teacherId;
+        const token: string = req.headers.token as string;
+
+        try {
+            const result = await transaction.submit(
+                contract, 'Class:RequestConfirm',
+                token, classId, teacherId
+            );
+            return handleTransactionRes(res, result);
+        } catch (error: any) {
+            return handleUnknownError(res, error);
+        }
+    }
+);
+
+classRouter.post(
+    '/confirm',
+    body('classId', 'must be a string').notEmpty(),
+    async (req: Request, res: Response) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(BAD_REQUEST).json({
+                status: "FAILED",
+                error: {
+                    code: "INVALID",
+                    msg: 'Invalid request body',
+                    detail: errors.array(),
+                },
+                timestamp: new Date().toISOString(),
+            });
+        }
+
+        const contract: Contract = req.app.locals.contract;
+        const classId: string = req.body.classId;
+        const token: string = req.headers.token as string;
+
+        try {
+            const result = await transaction.submit(
+                contract, 'Class:ConfirmRequest',
                 token, classId
             );
             return handleTransactionRes(res, result);

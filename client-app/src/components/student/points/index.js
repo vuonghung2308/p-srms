@@ -45,7 +45,7 @@ export default function StudentPoint() {
             <hr />
             {pointsRes.status === "SUCCESS" && infoRes.status === "SUCCESS" && (
                 <>
-                    <div className="flex mt-6">
+                    <div className="flex mt-6 ml-2">
                         <p className="font-semibold text-gray-600 text-[17px]">Họ và tên: {infoRes.data.name}</p>
 
                         <div className="w-[1px] mx-4 bg-gray-200"></div>
@@ -60,11 +60,11 @@ export default function StudentPoint() {
                                 <SemesterRow semester={semester} count={index}
                                     key={semester.year + semester.semester} />
                             ))}
-                            <tr className="border border-gray-400 font-semibold text-gray-800">
+                            <tr className="border-b font-semibold text-gray-800">
                                 <td colSpan="3" className="pl-2 py-1">Điểm trung bình tích lũy:</td>
                                 <td>{pointsRes.data.averagePoint}</td>
                             </tr>
-                            <tr className="border border-gray-400 font-semibold text-gray-800">
+                            <tr className="border-b font-semibold text-gray-800">
                                 <td colSpan="3" className="pl-2 py-1">Tổng số tín chỉ tích lũy:</td>
                                 <td>{pointsRes.data.numberOfAccumulatedCredit}</td>
                             </tr>
@@ -77,11 +77,11 @@ export default function StudentPoint() {
 }
 
 const PointHeader = () => {
-    const className = "border font-semibold border-gray-400 text-gray-800 px-2 py-1";
+    const className = "border-4 border-white font-semibold text-gray-800 px-2 py-1";
     return (
         <tr className="bg-gray-200 text-gray-600">
             <th className={`${className}`}>STT</th>
-            <th className={`${className} w-[6%]`}>Mã môn</th>
+            <th className={`${className} w-[7%]`}>Mã môn</th>
             <th className={`${className} w-[25%] text-start`}>Tên môn học</th>
             <th className={`${className}`}>TC</th>
             <th className={`${className}`}>%CC</th>
@@ -103,7 +103,7 @@ const PointHeader = () => {
 }
 
 const PointRow = ({ point, index }) => {
-    const className = "border border-gray-400 px-2 py-1.5 text-center"
+    const className = "border-b px-2 py-1.5 text-center"
     return (
         <tr>
             <td className={`${className}`}>{index + 1}</td>
@@ -137,18 +137,18 @@ const SemesterRow = ({ semester, count }) => {
     return (
         <>
             <tr>
-                <td colSpan="100%" className="border font-semibold border-gray-400 text-gray-800 px-2 py-1.5">
+                <td colSpan="100%" className="border-b font-semibold  text-gray-800 px-2 py-1.5">
                     Học kỳ {semester.semester} - Năm học {semester.year}-{semester.year + 1}
                 </td>
             </tr>
             {semester.points.map((point, index) => (
                 <PointRow point={point} index={count + index} key={point.id} />
             ))}
-            <tr className="border border-gray-400 font-semibold text-gray-800">
+            <tr className="border-b font-semibold text-gray-800">
                 <td colSpan="3" className="pl-2 py-1" >Điểm trung bình học kỳ: </td>
                 <td>{Number(semester.averagePoint)}</td>
             </tr>
-            <tr className="border border-gray-400 font-semibold text-gray-800">
+            <tr className="border-b border-gray-300 font-semibold text-gray-800">
                 <td colSpan="3" className="pl-2 py-1">Số tín chỉ đạt:</td>
                 <td>{semester.numberOfAccumulatedCredit}</td>
             </tr>

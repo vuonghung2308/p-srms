@@ -5,6 +5,7 @@ import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { Point } from "../vo/point";
 import { failed, success } from "../ledger/response";
+import { Request } from "../vo/request";
 
 
 @Info({ title: 'ClassContract', description: 'Smart contract for Class' })
@@ -30,14 +31,15 @@ export class ClassContract extends BaseContract {
                     ctx, "POINT", true,
                     async (record: Point) => {
                         if (record.studentId === this.currentPayload.id) {
-                            const cls = await ledger.getState(
+                            const cls: Class = await ledger.getState(
                                 ctx, record.classId, "CLASS"
                             );
-                            const subject = await ledger.getState(
-                                ctx, cls.subjectId, "SUBJECT"
-                            );
-                            delete cls.subjectId;
-                            cls.subject = subject;
+                            const values = await Promise.all([
+                                ledger.getState(ctx, cls.subjectId, "SUBJECT"),
+                                ledger.getState(ctx, cls.teacherId, "TEACHER")
+                            ])
+                            delete cls.subjectId; cls["subject"] = values[0];
+                            delete cls.teacherId; cls["teacher"] = values[1];
                             classes.push(cls);
                         }
                         return true;
@@ -48,12 +50,13 @@ export class ClassContract extends BaseContract {
             case "EMPLOYEE": {
                 classes = await ledger.getStates(
                     ctx, "CLASS", true,
-                    async (record) => {
-                        const subject = await ledger.getState(
-                            ctx, record.subjectId, "SUBJECT"
-                        );
-                        delete record.subjectId;
-                        record.subject = subject;
+                    async (record: Class) => {
+                        const values = await Promise.all([
+                            ledger.getState(ctx, record.subjectId, "SUBJECT"),
+                            ledger.getState(ctx, record.teacherId, "TEACHER")
+                        ])
+                        delete record.subjectId; record["subject"] = values[0];
+                        delete record.teacherId; record["teacher"] = values[1];
                         return true;
                     }
                 );
@@ -63,12 +66,19 @@ export class ClassContract extends BaseContract {
                 classes = await ledger.getStates(
                     ctx, "CLASS", true,
                     async (record) => {
-                        const subject = await ledger.getState(
-                            ctx, record.subjectId, "SUBJECT"
-                        );
-                        delete record.subjectId;
-                        record.subject = subject;
-                        return record.teacherId === this.currentPayload.id;
+                        if (record.teacherId === this.currentPayload.id ||
+                            record.censor === this.currentPayload.id
+                        ) {
+                            const values = await Promise.all([
+                                ledger.getState(ctx, record.subjectId, "SUBJECT"),
+                                ledger.getState(ctx, record.teacherId, "TEACHER"),
+                                ledger.getState(ctx, record.censor, "TEACHER")
+                            ])
+                            delete record.subjectId; record["subject"] = values[0];
+                            delete record.teacherId; record["teacher"] = values[1];
+                            delete record.censor; record["censor"] = values[2];
+                            return true;
+                        } else return false;
                     }
                 );
                 break;
@@ -82,6 +92,76 @@ export class ClassContract extends BaseContract {
             }
         }
         return success(classes);
+    }
+
+    @Transaction(false)
+    public async GetClass(ctx: Context, token: string, classId: string) {
+        const status = this.setCurrentPayload(
+            jwt.verify(token)
+        );
+        if (status.code !== "OKE") {
+            return failed({
+                code: status.code,
+                param: 'token',
+                msg: status.msg
+            });
+        }
+        const cls: Class = await ledger.getState(ctx, classId, "CLASS");
+        if (cls) {
+            const [subject, teacher] = await Promise.all([
+                ledger.getState(ctx, cls.subjectId, "SUBJECT"),
+                ledger.getState(ctx, cls.teacherId, "TEACHER")
+            ])
+            delete cls.subjectId; cls["subject"] = subject;
+            delete cls.teacherId; cls["teacher"] = teacher;
+            switch (this.currentPayload.type) {
+                case "STUDENT": {
+                    const points: Point[] = await ledger.getStates(
+                        ctx, "POINT", true,
+                        async (record: Point) => {
+                            return record.studentId === this.currentPayload.id
+                        }
+                    );
+                    const has = points.some(value => value.classId === classId)
+                    if (has === true && cls) {
+                        return success(cls);
+                    } else {
+                        return failed({
+                            code: "INCORRECT",
+                            param: 'classId',
+                            msg: `The class ${classId} not found.`
+                        });
+                    }
+                }
+                case "EMPLOYEE": {
+                    return success(cls);
+                }
+                case "TEACHER": {
+                    if (cls && cls["teacher"].id === this.currentPayload.id) {
+                        return success(cls);
+                    } else {
+                        return failed({
+                            code: "INCORRECT",
+                            param: 'classId',
+                            msg: `The class ${classId} not found.`
+                        });
+                    }
+                }
+                case "ADMIN": default: {
+                    return failed({
+                        code: "NOT_ALLOWED",
+                        param: 'token',
+                        msg: "You do not have permission"
+                    });
+                }
+            }
+        } else {
+            return failed({
+                code: "INCORRECT",
+                param: 'classId',
+                msg: `The class ${classId} not found.`
+            });
+        }
     }
 
     @Transaction(false)
@@ -134,7 +214,8 @@ export class ClassContract extends BaseContract {
                     });
                 }
                 if (this.currentPayload.type === "TEACHER" &&
-                    cls.teacherId !== this.currentPayload.id) {
+                    cls.teacherId !== this.currentPayload.id
+                ) {
                     return failed({
                         code: "INVALID",
                         param: 'classId',
@@ -280,5 +361,89 @@ export class ClassContract extends BaseContract {
         );
         delete point.docType;
         return success({ ...point, student });
+    }
+
+    @Transaction()
+    public async RequestConfirm(
+        ctx: Context, token: string, classId: string, teacherId: string
+    ): Promise<string> {
+        const status = this.setCurrentPayload(
+            jwt.verifyTeacher(token)
+        );
+        if (status.code !== "OKE") {
+            return failed({
+                code: status.code,
+                param: 'token',
+                msg: status.msg
+            });
+        }
+        const [censor, cls] = await Promise.all([
+            ledger.getState(ctx, teacherId, "TEACHER"),
+            ledger.getState(ctx, classId, "CLASS")
+        ])
+        if (!censor) {
+            return failed({
+                code: "INVALID",
+                param: 'teacherId',
+                msg: `The teacher ${teacherId} does not exist`
+            });
+        }
+        if (!cls || cls.teacherId !== this.currentPayload.id) {
+            return failed({
+                code: "INVALID",
+                param: 'classId',
+                msg: `The class ${classId} does not valid`
+            })
+        }
+        const time = new Date().getTime() / 1000;
+        // const request: Request = { censor: teacherId, time,}
+        cls.censor = teacherId;
+        cls.status = "REQUESTED"
+        cls.docType = 'CLASS';
+        await ledger.putState(
+            ctx, this, cls.id,
+            cls, cls.docType
+        );
+        const [subject, teacher] = await Promise.all([
+            ledger.getState(ctx, cls.subjectId, "SUBJECT"),
+            ledger.getState(ctx, cls.teacherId, "TEACHER")
+        ])
+        delete cls.docType; cls.censor = censor;
+        delete cls.subjectId; cls["subject"] = subject;
+        delete cls.teacherId; cls["teacher"] = teacher;
+        return success(cls);
+    }
+
+    @Transaction()
+    public async ConfirmRequest(
+        ctx: Context, token: string, classId: string
+    ): Promise<string> {
+        const status = this.setCurrentPayload(
+            jwt.verifyTeacher(token)
+        );
+        if (status.code !== "OKE") {
+            return failed({
+                code: status.code,
+                param: 'token',
+                msg: status.msg
+            });
+        }
+        const cls: Class = await ledger.getState(
+            ctx, classId, "CLASS"
+        )
+        // if (!cls || cls.censor !== this.currentPayload.id) {
+        //     return failed({
+        //         code: "INVALID",
+        //         param: 'classId',
+        //         msg: `The class ${classId} does not valid`
+        //     });
+        // }
+        // cls.status = "CONFIRMED"
+        cls.docType = 'CLASS';
+        await ledger.putState(
+            ctx, this, cls.id,
+            cls, cls.docType
+        );
+        return success();
     }
 }

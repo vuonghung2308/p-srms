@@ -33,6 +33,30 @@ export async function getClasses() {
     });
 }
 
+export async function getClass(classId) {
+    return send(`${baseUrl}/class/${classId}`, {
+        method: 'GET',
+    });
+}
+
+export async function confirm(classId) {
+    return send(`${baseUrl}/class/confirm`, {
+        body: JSON.stringify({
+            classId
+        }),
+        method: 'POST',
+    });
+}
+
+export async function request(classId, teacherId) {
+    return send(`${baseUrl}/class/request`, {
+        body: JSON.stringify({
+            classId, teacherId
+        }),
+        method: 'POST',
+    });
+}
+
 export async function updatePoint(
     studentId, classId,
     attendancePoint, exercisePoint,

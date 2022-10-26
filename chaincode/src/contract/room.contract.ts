@@ -4,6 +4,8 @@ import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { Room } from "../vo/room";
 import { failed, success } from "../ledger/response";
+import { Teacher } from "../vo/teacher";
+import { Subject } from "../vo/subject";
 
 
 @Info({ title: 'RoomContract', description: 'Smart contract for Room' })
@@ -25,15 +27,30 @@ export class RoomContract extends BaseContract {
         let rooms: Room[] = []
         switch (this.currentPayload.type) {
             case "TEACHER": {
-                rooms = await ledger.getStates(ctx, "ROOM", true,
-                    async (record: Room) => {
+                rooms = await ledger.getStates(
+                    ctx, "ROOM", true, async (record: Room) => {
+                        const values = await Promise.all([
+                            ledger.getState(ctx, record.teacherId, "TEACHER"),
+                            ledger.getState(ctx, record.subjectId, "SUBJECT")
+                        ]);
+                        delete record.teacherId; record['teacher'] = values[0];
+                        delete record.subjectId; record['subject'] = values[1];
                         return record.teacherId === this.currentPayload.id;
                     }
                 );
                 break;
             }
             case "EMPLOYEE": {
-                rooms = await ledger.getStates(ctx, "ROOM");
+                rooms = await ledger.getStates(
+                    ctx, "ROOM", true, async (record: Room) => {
+                        const values = await Promise.all([
+                            ledger.getState(ctx, record.teacherId, "TEACHER"),
+                            ledger.getState(ctx, record.subjectId, "SUBJECT")
+                        ]);
+                        delete record.teacherId; record['teacher'] = values[0];
+                        delete record.subjectId; record['subject'] = values[1];
+                        return true;
+                    });
                 break;
             }
             case "STUDENT": case "ADMIN": default: {
@@ -45,6 +62,62 @@ export class RoomContract extends BaseContract {
             }
         }
         return success(rooms);
+    }
+
+    @Transaction(false)
+    public async GetRoom(
+        ctx: Context, token: string, roomId: string
+    ): Promise<string> {
+        const status = this.setCurrentPayload(
+            jwt.verify(token)
+        );
+        if (status.code !== "OKE") {
+            return failed({
+                code: status.code,
+                param: 'token',
+                msg: status.msg
+            });
+        }
+        const room: Room = await ledger.getState(
+            ctx, roomId, "ROOM"
+        );
+        if (room) {
+            const values = await Promise.all([
+                ledger.getState(ctx, room.teacherId, "TEACHER"),
+                ledger.getState(ctx, room.subjectId, "SUBJECT")
+            ])
+            delete room.teacherId; room['teacher'] = values[0];
+            delete room.subjectId; room['subject'] = values[1];
+            switch (this.currentPayload.type) {
+                case "TEACHER": {
+                    if (room.teacherId === this.currentPayload.id) {
+                        return success(room);
+                    } else {
+                        return failed({
+                            code: "INCORRECT",
+                            param: 'roomId',
+                            msg: `The room ${roomId} not found.`
+                        });
+                    }
+                }
+                case "EMPLOYEE": {
+                    return success(room);
+                }
+                case "STUDENT": case "ADMIN": default: {
+                    return failed({
+                        code: "NOT_ALLOWED",
+                        param: 'token',
+                        msg: "You do not have permission"
+                    });
+                }
+            }
+        } else {
+            return failed({
+                code: "INCORRECT",
+                param: 'roomId',
+                msg: `The room ${roomId} not found.`
+            });
+        }
     }
 
     @Transaction()

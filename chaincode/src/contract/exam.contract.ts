@@ -137,8 +137,9 @@ export class ExamContract extends BaseContract {
         );
 
         const exam: Exam = {
-            id: examId, studentId, roomId,
-            point: null, code: examCode
+            id: examId, roomId: roomId,
+            point: null, code: examCode,
+            censor: null, status: null, note: null
         };
         point.examId = examId;
         exam.docType = 'EXAM';
@@ -151,7 +152,6 @@ export class ExamContract extends BaseContract {
             ctx, this, exam.id,
             exam, exam.docType
         );
-        delete exam.studentId;
         return success({ ...exam, student });
     }
 

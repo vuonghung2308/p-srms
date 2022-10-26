@@ -7,6 +7,12 @@ export const getRooms = () => {
     })
 }
 
+export const getRoom = (roomId) => {
+    return send(`${baseUrl}/room/${roomId}`, {
+        method: 'GET'
+    })
+}
+
 export const addExam = (roomId, studentId) => {
     return send(`${baseUrl}/room/add-exam`, {
         method: 'PUT',

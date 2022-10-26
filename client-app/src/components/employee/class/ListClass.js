@@ -29,7 +29,7 @@ export function ListClass() {
             <hr />
 
             {classesRes.status === "SUCCESS" && classesRes.data.length > 0 && (
-                <table className="mt-6">
+                <table className="mt-6 w-[100%]">
                     <thead>
                         <tr>
                             <Th>STT</Th>
@@ -37,6 +37,8 @@ export function ListClass() {
                             <Th>Mã môn học</Th>
                             <Th>Tên môn học</Th>
                             <Th>Số tín chỉ</Th>
+                            <Th>Mã giảng viên</Th>
+                            <Th>Tên giảng viên</Th>
                             <Th>Năm học</Th>
                             <Th>Kỳ học</Th>
                             <Th></Th>
@@ -51,6 +53,8 @@ export function ListClass() {
                                     <Td>{value.subject.id}</Td>
                                     <Td>{value.subject.name}</Td>
                                     <Td>{value.subject.numberOfCredit}</Td>
+                                    <Td>{value.teacher.id}</Td>
+                                    <Td>{value.teacher.name}</Td>
                                     <Td>{value.year}-{value.year + 1}</Td>
                                     <Td>{value.semester}</Td>
                                     <Td><Link className="text-blue-600 hover:text-blue-600 hover:underline" to={`${value.id}`}>Chi tiết</Link></Td>

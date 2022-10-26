@@ -64,10 +64,10 @@ const Header = () => {
             <Password
                 isShowing={isShowing}
                 toggle={toggle} onSuccess={() => {
-                    toggle()
+                    toggle();
                     setTimeout(() => {
                         alert("Đổi mật khẩu thành công!")
-                    }, 100)
+                    }, 200);
                 }} />
         </>
     );
