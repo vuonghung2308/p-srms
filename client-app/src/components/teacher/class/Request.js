@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { request } from "../../../api/class";
 import ReactDOM from 'react-dom';
 import { searchTeacher } from "../../../api/teacher";
+import { request } from "../../../api/confirm";
 
 export default function CreateRequest({ isShowing, toggle, onSuccess, id }) {
     const [status, setStatus] = useState({ status: "NONE" });
     const [isShowingTeachers, setIsShowingTeachers] = useState(false);
     const [teacherRes, setTeacherRes] = useState([]);
     const [teacherId, setTeacherId] = useState(id);
+    const [note, setNote] = useState("");
     const { classId } = useParams();
 
     const doSearchTeacher = (key) => {
@@ -25,10 +26,24 @@ export default function CreateRequest({ isShowing, toggle, onSuccess, id }) {
         if (isShowing === true) {
             doSearchTeacher(id);
         }
-    }, [isShowing])
+    }, [isShowing, id])
+
+    useEffect(() => {
+        if (teacherId.length !== 0 && note.length !== 0) {
+            setStatus({ status: "NONE" })
+        }
+        console.log(`${teacherId.length} ${note.length}`);
+    }, [teacherId, note])
 
     const handleRequest = async () => {
-        request(classId, teacherId).then(res => {
+        if (teacherId.length === 0 || note.length === 0) {
+            setStatus({
+                status: "FAILED",
+                message: "Mã giáo viên hoặc ghi chú bị bỏ trống."
+            });
+            return;
+        }
+        request(classId, teacherId, note, "COMPONENTS_POINT").then(res => {
             if (res.status === "SUCCESS") {
                 setStatus({ status: "SUCCESS" })
                 onSuccess(res.data)
@@ -90,8 +105,8 @@ export default function CreateRequest({ isShowing, toggle, onSuccess, id }) {
                             )}
 
                             <p className="mt-3">Ghi chú</p>
-                            <textarea rows={3} type="password" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-1 resize-none"
-                                placeholder="Xin phê duyệt bảng điểm" />
+                            <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-1 resize-none"
+                                placeholder="Xin phê duyệt bảng điểm" value={note} onChange={e => setNote(e.target.value)} />
                         </div>
                         <button className="w-full bg-red-normal hover:bg-red-dark text-white font-semibold py-2 rounded-lg mt-6"
                             onClick={handleRequest}>Lưu</button>

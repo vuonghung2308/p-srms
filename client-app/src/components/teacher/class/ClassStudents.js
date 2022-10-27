@@ -1,8 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { confirm, getClass, getStudents, updatePoint } from "../../../api/class";
-import { TextInput } from "../../../common/components/input";
-import { Td, Th } from "../../../common/table";
+import { getClass, getStudents, updatePoint } from "../../../api/class";
 import { PayloadContext } from "../../../common/token";
 import useModal from "../../common/Modal/use";
 import CreateRequest from "./Request";
@@ -54,31 +52,30 @@ export function ClassStudents() {
     }
 
     const handleConfirm = () => {
-        confirm(classId).then(res => {
-            setClassRes({
-                ...classRes,
-                data: {
-                    ...classRes.data,
-                    status: "CONFIRMED"
-                }
-            })
-        });
+        // confirm(classId).then(res => {
+        //     setClassRes({
+        //         ...classRes,
+        //         data: {
+        //             ...classRes.data,
+        //             status: "CONFIRMED"
+        //         }
+        //     })
+        // });
     }
 
     const handleReject = () => {
-        confirm(classId).then(res => {
-            setClassRes({
-                ...classRes,
-                data: {
-                    ...classRes.data,
-                    status: "CONFIRMED"
-                }
-            })
-        });
+        // confirm(classId).then(res => {
+        //     setClassRes({
+        //         ...classRes,
+        //         data: {
+        //             ...classRes.data,
+        //             status: "CONFIRMED"
+        //         }
+        //     })
+        // });
     }
 
     const handleRequestSuccess = (data) => {
-        setClassRes({ status: "SUCCESS", data });
         setTimeout(() => {
             alert("Lưu yêu cầu thành công!")
         }, 200);

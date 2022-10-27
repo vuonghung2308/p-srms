@@ -4,14 +4,13 @@ import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { failed, success } from "../ledger/response";
 import { Claim } from "../vo/claim";
-import { Point } from "../vo/point";
 import { Class } from "../vo/class";
 import { Confirm } from "../vo/confirm";
 import { Room } from "../vo/room";
 
 @Info({ title: 'ConfirmContract', description: 'Smart contract for Confirm' })
 export class ConfirmContract extends BaseContract {
-    public constructor() { super('Claim'); }
+    public constructor() { super('Confirm'); }
 
     @Transaction(false)
     public async GetConfirms(
@@ -127,7 +126,7 @@ export class ConfirmContract extends BaseContract {
         id: string, censorId: string, note: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
-            jwt.verifyStudent(token)
+            jwt.verifyTeacher(token)
         );
         if (status.code !== "OKE") {
             return failed({
