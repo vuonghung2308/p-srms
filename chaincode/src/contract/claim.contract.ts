@@ -156,7 +156,21 @@ export class ClaimContract extends BaseContract {
                 msg: status.msg
             });
         }
+        
         if (type === "COMPONENTS_POINT" || type === "EXAM_POINT") {
+            const currentClaims = await ledger.getStates(
+                ctx, "CLAIM", true, async (record: Claim) => {
+                    return record.objectId === id
+                }
+            )
+            if (currentClaims.length === 1) {
+                return failed({
+                    code: "EXISTED",
+                    param: 'id',
+                    msg: `The claim for ${id} already exists`
+                });
+            }
+            
             const claims: Claim[] = await ledger
                 .getStates(ctx, "CLAIM");
             const claim: Claim = {
@@ -201,7 +215,7 @@ export class ClaimContract extends BaseContract {
                     );
                 } else {
                     return failed({
-                        code: 'NOT_ALLOWED',
+                        code: 'NOT_EXIST',
                         param: 'id',
                         msg: `The exam ${id} does not exist.`
                     });

@@ -7,13 +7,19 @@ export class Confirm {
     @Property()
     public id: string;
     @Property()
-    public censor: string;
+    public objectId: string;
+    @Property()
+    public teacherId: string;
+    @Property()
+    public censorId1: string;
+    @Property()
+    public censorId2: string;
+    @Property()
+    public time: number;
     @Property()
     public type: string;
     @Property()
     public status: string;
     @Property()
     public note: string;
-    @Property()
-    public time: number;
 }
