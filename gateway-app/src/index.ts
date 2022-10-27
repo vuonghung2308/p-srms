@@ -19,6 +19,7 @@ import { studentRouter } from "./router/student.router";
 import { ledgerRouter } from "./router/ledger.router";
 import bodyParser from "body-parser";
 import { claimRouter } from "./router/claim.router";
+import { confirmRouter } from "./router/confirm.router";
 
 const { NOT_FOUND } = StatusCodes;
 
@@ -60,6 +61,7 @@ async function createRoutes(app: Application): Promise<void> {
     app.use('/api/exam', checkToken, examRouter);
     app.use('/api/transaction', checkToken, transactionRouter);
     app.use('/api/claim', checkToken, claimRouter);
+    app.use('/api/confirm', checkToken, confirmRouter);
 }
 
 async function main() {

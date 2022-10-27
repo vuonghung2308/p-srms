@@ -7,8 +7,6 @@ import { Claim } from "../vo/claim";
 import { Point } from "../vo/point";
 import { Class } from "../vo/class";
 import { Confirm } from "../vo/confirm";
-import { type } from "os";
-import { Teacher } from "../vo/teacher";
 import { Room } from "../vo/room";
 
 @Info({ title: 'ConfirmContract', description: 'Smart contract for Confirm' })
@@ -16,7 +14,7 @@ export class ConfirmContract extends BaseContract {
     public constructor() { super('Claim'); }
 
     @Transaction(false)
-    public async GetClaims(
+    public async GetConfirms(
         ctx: Context, token: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
@@ -29,44 +27,29 @@ export class ConfirmContract extends BaseContract {
                 msg: status.msg
             });
         }
-        let claims = [];
+        let confirms = [];
         switch (this.currentPayload.type) {
-            case "STUDENT": {
-                claims = await ledger.getStates(
-                    ctx, "CLAIM", true,
-                    async (record: Claim) => {
-                        return record.studentId === this.currentPayload.id
-                    }
-                );
-                break;
-            }
             case "EMPLOYEE": {
-                claims = await ledger.getStates(
-                    ctx, "CLAIM", true,
-                    async (record: Claim) => {
-                        return record.type === "EXAM_POINT"
+                confirms = await ledger.getStates(
+                    ctx, "CONFIRM", true,
+                    async (record: Confirm) => {
+                        return record.censorId2 === this.currentPayload.id ||
+                            record.censorId2 === null
                     }
                 );
                 break;
             }
             case "TEACHER": {
-                claims = await ledger.getStates(
-                    ctx, "CLAIM", true,
-                    async (record: Claim) => {
-                        if (record.type === "COMPONENTS_POINT") {
-                            const point: Point = await ledger.getState(
-                                ctx, record.objectId, "POINT"
-                            );
-                            const cls: Class = await ledger.getState(
-                                ctx, point.classId, "CLASS"
-                            );
-                            return cls.teacherId === this.currentPayload.id;
-                        } else { return false; }
+                confirms = await ledger.getStates(
+                    ctx, "CONFIRM", true,
+                    async (record: Confirm) => {
+                        return record.censorId1 === this.currentPayload.id ||
+                            record.teacherId === this.currentPayload.id
                     }
                 );
                 break;
             }
-            case "ADMIN": default: {
+            case "STUDENT": case "ADMIN": default: {
                 return failed({
                     code: "NOT_ALLOWED",
                     param: 'token',
@@ -74,12 +57,12 @@ export class ConfirmContract extends BaseContract {
                 });
             }
         }
-        return success(claims);
+        return success(confirms);
     }
 
     @Transaction(false)
-    public async GetClaim(
-        ctx: Context, token: string, claimId: string
+    public async GetConfirm(
+        ctx: Context, token: string, confirmId: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
             jwt.verify(token)
@@ -91,43 +74,37 @@ export class ConfirmContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const claim: Claim = await ledger.getState(
-            ctx, claimId, "CLAIM"
+        const confirm: Confirm = await ledger.getState(
+            ctx, confirmId, "CONFIRM"
         );
-        if (claim) {
+        if (confirm) {
             switch (this.currentPayload.type) {
-                case "STUDENT": {
-                    if (claim.studentId === this.currentPayload.id) {
-                        return success(claim);
-                    } else {
+                case "EMPLOYEE": {
+                    if (confirm.censorId2 === this.currentPayload.id ||
+                        confirm.censorId2 === null
+                    ) {
                         return failed({
                             code: "INVALID",
-                            param: 'claimId',
-                            msg: `The claim ${claimId} is not valid.`
+                            param: 'confirmId',
+                            msg: `The confirm ${confirmId} is not valid.`
                         });
                     }
-                }
-                case "EMPLOYEE": {
-                    return success(claim);
+                    return success(confirm);
                 }
                 case "TEACHER": {
-                    const point: Point = await ledger.getState(
-                        ctx, claim.objectId, "POINT"
-                    );
-                    const cls: Class = await ledger.getState(
-                        ctx, point.classId, "CLASS"
-                    );
-                    if (cls.teacherId === this.currentPayload.id) {
-                        return success(claim);
+                    if (confirm.teacherId === this.currentPayload.id ||
+                        confirm.censorId1 === this.currentPayload.id
+                    ) {
+                        return success(confirm);
                     } else {
                         return failed({
                             code: "INVALID",
-                            param: 'claimId',
-                            msg: `The claim ${claimId} is not valid.`
+                            param: 'confirmId',
+                            msg: `The confirm ${confirmId} is not valid.`
                         });
                     }
                 }
-                case "ADMIN": default: {
+                case "STUDENT": case "ADMIN": default: {
                     return failed({
                         code: "NOT_ALLOWED",
                         param: 'token',
@@ -138,8 +115,8 @@ export class ConfirmContract extends BaseContract {
         } else {
             return failed({
                 code: "NOT_FOUND",
-                param: 'claimId',
-                msg: `The claim ${claimId} not found.`
+                param: 'confirmId',
+                msg: `The confirm ${confirmId} not found.`
             });
         }
     }
@@ -317,7 +294,7 @@ export class ConfirmContract extends BaseContract {
                 confirm.note = note;
                 confirm.docType = "CONFIRM";
                 if (this.currentPayload.type === "EMPLOYEE") {
-                    if (confirm.status !== "DONE" && confirm.type==="COMPONENTS_POINT") {
+                    if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
                             code: "NOT_ALLOWED",
                             param: 'id',
