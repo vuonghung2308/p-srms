@@ -47,7 +47,7 @@ export default function CancelConfirm({
                             </button>
                         </div>
                         <div className="mt-4 mx-1">
-                            <p className="mt-1">Giáo viên xác nhận: {confirm.censor1.id} - {confirm.censor1.name}</p>
+                            <p className="mt-1">GV xác nhận: {confirm.censor1.id} - {confirm.censor1.name}</p>
                             <p className="mt-1">Ngày yêu cầu: {strTime(confirm.time)}</p>
                             <p className="mt-1">Ghi chú: {confirm.note}</p>
                         </div>

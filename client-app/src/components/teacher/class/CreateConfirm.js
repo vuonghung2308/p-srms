@@ -105,7 +105,7 @@ export default function CreateConfirm({
                                 </div>
                             )}
 
-                            <p className="mt-3">Ghi chú</p>
+                            <p className="mt-3">Chú thích</p>
                             <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-1 resize-none"
                                 placeholder="Xin phê duyệt bảng điểm" value={note} onChange={e => setNote(e.target.value)} />
                         </div>

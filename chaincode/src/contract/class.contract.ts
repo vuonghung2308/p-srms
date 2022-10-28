@@ -69,9 +69,8 @@ export class ClassContract extends BaseContract {
                             }
                         )
                         if (record.teacherId === this.currentPayload.id ||
-                            (confirm && (confirm.status === "INITIALIZED") &&
-                                confirm.censorId1 === this.currentPayload.id
-                            )
+                            (confirm && confirm.censorId1 === this.currentPayload.id &&
+                                confirm.status !== "CANCELED")
                         ) {
                             const values = await Promise.all([
                                 ledger.getState(ctx, record.subjectId, "SUBJECT"),

@@ -95,7 +95,7 @@ const getTimeString = () => {
             day_name = "Thứ năm";
             break;
         case 5:
-            day_name = "Thứ sau";
+            day_name = "Thứ sáu";
             break;
         case 6: default:
             day_name = "Thứ bảy";

@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getClass, getStudents, updatePoint } from "../../../api/class";
 import { PayloadContext } from "../../../common/token";
+import { strTime } from "../../../ultils/time";
 import useModal from "../../common/Modal/use";
 import HandleConfirm from "./AcceptConfirm";
 import CancelConfirm from "./CancelConfirm";
@@ -107,49 +108,6 @@ export function ClassStudents() {
         <>
             <div className="py-4">
                 <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin lớp học</p>
-                {classRes.status === "SUCCESS" && (classRes.data.teacher.id === payload.id ? (
-                    (!classRes.data.confirm || classRes.data.confirm.status === "CANCELED" ||
-                        classRes.data.confirm.status === "REJECTED"
-                    ) ? (
-                        <>
-                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                onClick={creationToggle}>
-                                Yêu cầu phê duyệt
-                            </Link>
-                            <CreateConfirm
-                                toggle={creationToggle}
-                                isShowing={isCreationShowing}
-                                onSuccess={handleCreationSuccess}
-                                id={classRes.data.censor ? classRes.data.censor.id : ''} />
-                        </>
-                    ) : classRes.status === "INITIALIZED" && (
-                        <>
-                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                onClick={cancelationToggle}>
-                                Hủy yêu cầu
-                            </Link>
-                            <CancelConfirm
-                                toggle={cancelationToggle}
-                                isShowing={isCancelationShowing}
-                                onSuccess={handleCancelationSuccess}
-                                confirm={classRes.data.confirm} />
-                        </>
-                    )
-                ) : (
-                    classRes.data.confirm.status === "REQUESTED" && (
-                        <>
-                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                            >
-                                Phê duyệt
-                            </Link>
-                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                onClick={handleConfirm}>
-                                Từ chối
-                            </Link>
-                        </>
-                    )
-                ))}
-
             </div>
             <hr />
             {classRes.status === "SUCCESS" && (
@@ -165,19 +123,6 @@ export function ClassStudents() {
                         <p className="inline ml-4">Năm học: {classRes.data.year}-{classRes.data.year + 1}</p>
                         <p className="inline ml-4">Giáo viên: {classRes.data.teacher.id} - {classRes.data.teacher.name}</p>
                     </div>
-                    {classRes.data.status && (
-                        <div className="pt-1">
-                            <p className="inline">
-                                Bảng điểm: {
-                                    classRes.data.status === "REQUESTED" ?
-                                        "đang yêu cầu duyệt" :
-                                        classRes.data.status === "CONFIRMED" ?
-                                            "đã duyệt" : "đã từ chối"
-                                }
-                            </p>
-                            <p className="inline ml-4">Người duyệt: {classRes.data.censor.id} - {classRes.data.censor.name}</p>
-                        </div>
-                    )}
                 </div>
 
             )}
@@ -282,19 +227,79 @@ export function ClassStudents() {
                             })}
                         </tbody>
                     </table>
-                    {classRes.data && classRes.data.confirm &&
-                        classRes.data.confirm.censor1.id === payload.id &&
-                        classRes.data.confirm.status !== "ACCEPTED" && (
-                            <>
-                                <button onClick={acceptionToggle}>Xử lý</button>
-                                <HandleConfirm
-                                    toggle={acceptionToggle}
-                                    isShowing={isAcceptionShowing}
-                                    confirm={classRes.data.confirm}
-                                    onSuccess={handleConfirm} />
-                            </>
-                        )
-                    }
+                    {classRes.data && (
+                        <div className="my-4">
+                            <div className="flex">
+                                <p className="mr-4 text-lg font-semibold text-gray-600">Xác nhận bảng điểm</p>
+                                <>{(classRes.data.teacher.id === payload.id ? (
+                                    <>
+                                        {(!classRes.data.confirm || classRes.data.confirm.status === "CANCELED") && (
+                                            <>
+                                                <button className="h-fit my-auto flex border text-sm hover:border-red-dark px-2 text-gray-500 font-semibold rounded hover:text-red-dark"
+                                                    onClick={creationToggle} >
+                                                    <p className="my-auto">Tạo yêu cầu</p>
+                                                    <i className="my-auto pl-2 fa-solid fa-plus" />
+                                                </button>
+                                                <CreateConfirm
+                                                    toggle={creationToggle}
+                                                    isShowing={isCreationShowing}
+                                                    onSuccess={handleCreationSuccess}
+                                                    id={classRes.data.censor ? classRes.data.censor.id : ''} />
+                                            </>
+                                        )}
+                                        {(classRes.data.confirm && classRes.data.confirm.status === "INITIALIZED") && (
+                                            <>
+                                                <button className="h-fit my-auto flex border text-sm hover:border-red-dark px-2 text-gray-500 font-semibold rounded hover:text-red-dark"
+                                                    onClick={cancelationToggle} >
+                                                    <p className="my-auto">Hủy yêu cầu</p>
+                                                    <i className="my-auto pl-2 fa-solid fa-xmark" />
+                                                </button>
+                                                <CancelConfirm
+                                                    toggle={cancelationToggle}
+                                                    isShowing={isCancelationShowing}
+                                                    confirm={classRes.data.confirm}
+                                                    onSuccess={handleCancelationSuccess} />
+                                            </>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        {(classRes.data.confirm && classRes.data.confirm.status === "INITIALIZED") && (
+                                            <>
+                                                <button className="h-fit my-auto flex border text-sm hover:border-red-dark px-2 text-gray-500 font-semibold rounded hover:text-red-dark"
+                                                    onClick={acceptionToggle} >
+                                                    <p className="my-auto">Xử lý yêu cầu</p>
+                                                    <i className="my-auto pl-2 fa-solid fa-arrow-right" />
+                                                </button>
+                                                <HandleConfirm
+                                                    toggle={acceptionToggle}
+                                                    isShowing={isAcceptionShowing}
+                                                    confirm={classRes.data.confirm}
+                                                    onSuccess={handleConfirm} />
+                                            </>
+                                        )}
+                                    </>
+                                ))}</>
+                            </div>
+                            {classRes.data.confirm && classRes.data.confirm.status !== "CANCELED" && (
+                                <div className="flex">
+                                    <div className="w-[50%]">
+                                        {classRes.data.teacher.id === payload.id ? (
+                                            <p className="mt-2">GV xác nhận: {classRes.data.confirm.censor1.name} - ID: {classRes.data.confirm.censor1.id}</p>
+                                        ) : (
+                                            <p className="mt-2">GV yêu cầu: {classRes.data.teacher.name} - ID: {classRes.data.teacher.id}</p>
+                                        )}
+                                        <p className="mt-1">Thời gian tạo: {strTime(classRes.data.confirm.time)}</p>
+                                    </div>
+                                    <div className="w-[50%] ml-20">
+                                        <p className="mt-1">Trạng thái yêu cầu: khởi tạo</p>
+                                        <p className="mt-1">Ghi chú: {classRes.data.confirm.note}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                 </>
             )}
         </>

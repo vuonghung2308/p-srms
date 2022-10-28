@@ -63,7 +63,7 @@ export default function HandleConfirm({
                             </button>
                         </div>
                         <div className="mt-4 mx-1">
-                            <p className="mt-1">Giáo viên yêu cầu: {confirm.censor1.id} - {confirm.censor1.name}</p>
+                            <p className="mt-1">GV yêu cầu: {confirm.censor1.id} - {confirm.censor1.name}</p>
                             <p className="mt-1">Ngày yêu cầu: {strTime(confirm.time)}</p>
                             <p className="mt-1">Ghi chú: {confirm.note}</p>
                         </div>
@@ -71,18 +71,19 @@ export default function HandleConfirm({
                         <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
                             placeholder="Chú thích thêm" value={note} onChange={e => setNote(e.target.value)} />
 
-                        <div className="block text-end">
-                            <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
+                        {status.status === "FAILED" && (
+                            <p className="text-red-500 font-semibold mt-2 ml-1 -mb-2">
+                                {status.message}
+                            </p>
+                        )}
+
+                        <div className="block text-end mt-4">
+                            <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg"
                                 onClick={handleConfirmRejection}>Từ chối</button>
-                            <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
+                            <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg"
                                 onClick={handleConfirmAcception}>Xác nhận</button>
                         </div>
 
-                        {status.status === "FAILED" ? (
-                            <p className="text-red-500 font-semibold mt-3">
-                                {status.message}
-                            </p>
-                        ) : (<p className="mt-3" />)}
                     </div>
                 </div>
             </div>, document.body
