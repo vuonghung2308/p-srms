@@ -10,11 +10,11 @@ import CreateConfirm from "./CreateConfirm";
 
 export function ClassStudents() {
     const payload = useContext(PayloadContext);
-    const { classId } = useParams()
     const [pointsRes, setPointsRes] = useState({ status: "NONE" });
     const [classRes, setClassRes] = useState({ status: "NONE" });
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
+    const { classId } = useParams();
     const {
         isShowing: isCancelationShowing,
         toggle: cancelationToggle
@@ -133,7 +133,8 @@ export function ClassStudents() {
                     <table className="mt-3 w-[100%]">
                         <thead>
                             <tr className="bg-gray-200 text-gray-600">
-                                <th className="border-4 border-white py-0.5">Mã SV</th>
+                                <th className="border-4 border-white py-0.5">STT</th>
+                                <th className="border-4 border-white">Mã SV</th>
                                 <th className="border-4 border-white">Họ và tên</th>
                                 <th className="border-4 border-white">Điểm CC</th>
                                 <th className="border-4 border-white">Điểm TH</th>
@@ -149,10 +150,11 @@ export function ClassStudents() {
                             </tr>
                         </thead>
                         <tbody>
-                            {pointsRes.data.map(value => {
+                            {pointsRes.data.map((value, index) => {
                                 return (
                                     <tr className="border-b" key={value.student.id}>
-                                        <td className="text-center py-0.5">{value.student.id}</td>
+                                        <td className="text-center py-0.5">{index + 1}</td>
+                                        <td className="text-center">{value.student.id}</td>
                                         <td className="text-start pl-4">{value.student.name}</td>
                                         <td className="text-center">
                                             {isEditing && value.id === selectedPoint.id ? (
@@ -230,7 +232,7 @@ export function ClassStudents() {
                     {classRes.data && (
                         <div className="my-4">
                             <div className="flex">
-                                <p className="mr-4 text-lg font-semibold text-gray-600">Xác nhận bảng điểm</p>
+                                <p className="mr-4 text-lg font-semibold text-gray-600">Xác nhận bảng điểm thành phần</p>
                                 <>{(classRes.data.teacher.id === payload.id ? (
                                     <>
                                         {(!classRes.data.confirm || classRes.data.confirm.status === "CANCELED") && (
@@ -292,14 +294,24 @@ export function ClassStudents() {
                                         <p className="mt-1">Thời gian tạo: {strTime(classRes.data.confirm.time)}</p>
                                     </div>
                                     <div className="w-[50%] ml-20">
-                                        <p className="mt-1">Trạng thái yêu cầu: khởi tạo</p>
+                                        {classRes.data.confirm.status === "INITIALIZED" && (
+                                            <p className="mt-1">Trạng thái: chờ duyệt</p>
+                                        )}
+                                        {classRes.data.confirm.status === "ACCEPTED" && (
+                                            <p className="mt-1">Trạng thái: đã duyệt</p>
+                                        )}
+                                        {classRes.data.confirm.status === "DONE" && (
+                                            <p className="mt-1">Trạng thái: đã duyệt</p>
+                                        )}
+                                        {classRes.data.confirm.status === "REJECTED" && (
+                                            <p className="mt-1">Trạng thái: bị từ chối</p>
+                                        )}
                                         <p className="mt-1">Ghi chú: {classRes.data.confirm.note}</p>
                                     </div>
                                 </div>
                             )}
                         </div>
                     )}
-
                 </>
             )}
         </>

@@ -8,6 +8,7 @@ import { Subject } from "../vo/subject";
 import { Class } from "../vo/class";
 import { failed, success } from "../ledger/response";
 import { calculateAveragePoint, getNumberAveragePoint } from "../utils/point";
+import { Confirm } from "../vo/confirm";
 
 
 @Info({ title: 'PointContract', description: 'Smart contract for Point' })
@@ -146,16 +147,25 @@ export class PointContract extends BaseContract {
         const classes: Class[] = [];
         const points = await ledger.getStates(ctx, "POINT", async (record: Point) => {
             if (record.studentId === this.currentPayload.id) {
-                const exam: Exam = await ledger.getState(ctx, record.examId, "EXAM");
-                const cls: Class = await ledger.getState(ctx, record.classId, "CLASS");
-                const subject: Subject = await ledger.getState(ctx, cls.subjectId, "SUBJECT");
+                const [exam, cls]: [Exam, Class] = await Promise.all([
+                    ledger.getState(ctx, record.examId, "EXAM"),
+                    ledger.getState(ctx, record.classId, "CLASS")
+                ])
+                const [subject, confirm]: [Subject, Confirm] = await Promise.all([
+                    ledger.getState(ctx, cls.subjectId, "SUBJECT"),
+                    ledger.getFirstState(
+                        ctx, "CONFIRM", async (record: Confirm) => {
+                            return record.objectId === exam.id
+                        }
+                    )
+                ]);
                 classes.push(cls);
                 delete record.examId;
                 delete record.classId;
                 delete cls.subjectId;
                 cls['subject'] = subject;
                 record['cls'] = cls;
-                if (exam) {
+                if (exam && confirm.status === "DONE") {
                     record['examPoint'] = exam.point;
                 }
                 if (record['examPoint'] != null && record.attendancePoint != null &&

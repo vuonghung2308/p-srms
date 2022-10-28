@@ -4,7 +4,7 @@ import { doneConfirm, rejectConfirm } from "../../../api/confirm";
 import { strTime } from "../../../ultils/time"
 
 export default function HandleConfirm({
-    isShowing, toggle, onSuccess, confirm
+    isShowing, toggle, onSuccess, confirm, teacher
 }) {
     const [status, setStatus] = useState({ status: "NONE" });
     const [note, setNote] = useState("");
@@ -63,7 +63,7 @@ export default function HandleConfirm({
                             </button>
                         </div>
                         <div className="mt-4 mx-1">
-                            <p className="mt-1">Giáo viên yêu cầu: {confirm.censor1.id} - {confirm.censor1.name}</p>
+                            <p className="mt-1">GV yêu cầu: {teacher.id} - {teacher.name}</p>
                             <p className="mt-1">Ngày yêu cầu: {strTime(confirm.time)}</p>
                             <p className="mt-1">Ghi chú: {confirm.note}</p>
                         </div>
