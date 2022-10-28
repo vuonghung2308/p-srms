@@ -85,8 +85,7 @@ export class ClassContract extends BaseContract {
             }
             case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
@@ -147,8 +146,7 @@ export class ClassContract extends BaseContract {
                     )
                     if (point) { return success(cls); } else {
                         return failed({
-                            code: "INCORRECT",
-                            param: 'classId',
+                            code: "INCORRECT", param: 'classId',
                             msg: `The class ${classId} not found.`
                         });
                     }
@@ -159,24 +157,21 @@ export class ClassContract extends BaseContract {
                         confirm.censorId1 === this.currentPayload.id
                     ) { return success(cls); } else {
                         return failed({
-                            code: "INCORRECT",
-                            param: 'classId',
+                            code: "INCORRECT", param: 'classId',
                             msg: `The class ${classId} not found.`
                         });
                     }
                 }
                 case "ADMIN": default: {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
             }
         } else {
             return failed({
-                code: "INCORRECT",
-                param: 'classId',
+                code: "INCORRECT", param: 'classId',
                 msg: `The class ${classId} not found.`
             });
         }
@@ -203,8 +198,7 @@ export class ClassContract extends BaseContract {
                 const point = await ledger.getState(ctx, pointId, "POINT");
                 if (!point) {
                     return failed({
-                        code: "INVALID",
-                        param: 'classId',
+                        code: "INVALID", param: 'classId',
                         msg: `You is not in class ${classId}`
                     });
                 }
@@ -230,8 +224,7 @@ export class ClassContract extends BaseContract {
                 )
                 if (!cls) {
                     return failed({
-                        code: "NOT_EXISTED",
-                        param: 'classId',
+                        code: "NOT_EXISTED", param: 'classId',
                         msg: `The class ${classId} does not exist`
                     });
                 }
@@ -240,8 +233,7 @@ export class ClassContract extends BaseContract {
                     confirm.censorId1 !== this.currentPayload.id
                 ) {
                     return failed({
-                        code: "INVALID",
-                        param: 'classId',
+                        code: "INVALID", param: 'classId',
                         msg: `You do not teach class ${classId}`
                     });
                 }
@@ -268,8 +260,7 @@ export class ClassContract extends BaseContract {
             }
             case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
@@ -297,22 +288,19 @@ export class ClassContract extends BaseContract {
         );
         if (await ledger.isStateExists(ctx, classId, "CLASS")) {
             return failed({
-                code: "EXISTED",
-                param: 'classId',
+                code: "EXISTED", param: 'classId',
                 msg: `The class ${classId} already exists`
             });
         }
         if (!subject) {
             return failed({
-                code: "NOT_EXISTED",
-                param: 'subjectId',
+                code: "NOT_EXISTED", param: 'subjectId',
                 msg: `The subject ${subjectId} does not exist`
             });
         }
         if (!await ledger.isStateExists(ctx, teacherId, "TEACHER")) {
             return failed({
-                code: "NOT_EXISTED",
-                param: 'teacherId',
+                code: "NOT_EXISTED", param: 'teacherId',
                 msg: `The teacher ${teacherId} does not exist`
             });
         }
@@ -350,22 +338,19 @@ export class ClassContract extends BaseContract {
         );
         if (await ledger.isStateExists(ctx, pointId, 'POINT')) {
             return failed({
-                code: "INVALID",
-                param: 'studentId|classId',
+                code: "INVALID", param: 'studentId|classId',
                 msg: `The student ${studentId} is already in class ${classId}`
             });
         }
         if (!await ledger.isStateExists(ctx, classId, "CLASS")) {
             return failed({
-                code: "NOT_EXISTED",
-                param: 'classId',
+                code: "NOT_EXISTED", param: 'classId',
                 msg: `The class ${classId} does not exist`
             });
         }
         if (!student) {
             return failed({
-                code: "NOT_EXISTED",
-                param: 'studentId',
+                code: "NOT_EXISTED", param: 'studentId',
                 msg: `The student ${studentId} does not exist`
             });
         }

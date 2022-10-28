@@ -79,11 +79,10 @@ export class AccountContract extends BaseContract {
             return success();
         } else {
             return failed({
-                code: 'NOT_ALLOWED',
-                param: 'oldPassword',
+                code: 'NOT_ALLOWED', param: 'oldPassword',
                 msg: "The old password is not correct."
             })
         }
-        
+
     }
 }

@@ -232,9 +232,8 @@ export class ConfirmContract extends BaseContract {
             ledger.getState(ctx, confirm.censorId1, "TEACHER"),
         ]);
         if (cls !== null && cls.teacherId === this.currentPayload.id) {
-            confirm.status = "CANCELED";
+            confirm.status = "CANCELED"; confirm.note = note;
             confirm.time = new Date().getTime() / 1000;
-            confirm.note = note;
             confirm.docType = "CONFIRM";
             await ledger.putState(
                 ctx, this, confirm.id,
@@ -284,9 +283,8 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                confirm.status = "ACCEPTED";
+                confirm.status = "ACCEPTED"; confirm.note = note;
                 confirm.time = new Date().getTime() / 1000;
-                confirm.note = note;
                 confirm.docType = "CONFIRMED";
                 if (this.currentPayload.type === "EMPLOYEE") {
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
@@ -346,9 +344,8 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                confirm.status = "REJECTED";
+                confirm.status = "REJECTED"; confirm.note = note;
                 confirm.time = new Date().getTime() / 1000;
-                confirm.note = note;
                 confirm.docType = "CONFIRM";
                 await ledger.putState(
                     ctx, this, confirm.id,
@@ -399,9 +396,8 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                confirm.status = "DONE";
+                confirm.status = "DONE"; confirm.note = note;
                 confirm.time = new Date().getTime() / 1000;
-                confirm.note = note;
                 confirm.docType = "CONFIRM";
                 await ledger.putState(
                     ctx, this, confirm.id,

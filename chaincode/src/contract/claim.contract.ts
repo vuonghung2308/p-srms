@@ -61,8 +61,7 @@ export class ClaimContract extends BaseContract {
             }
             case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
@@ -94,8 +93,7 @@ export class ClaimContract extends BaseContract {
                         return success(claim);
                     } else {
                         return failed({
-                            code: "INVALID",
-                            param: 'claimId',
+                            code: "INVALID", param: 'claimId',
                             msg: `The claim ${claimId} is not valid.`
                         });
                     }
@@ -114,24 +112,21 @@ export class ClaimContract extends BaseContract {
                         return success(claim);
                     } else {
                         return failed({
-                            code: "INVALID",
-                            param: 'claimId',
+                            code: "INVALID", param: 'claimId',
                             msg: `The claim ${claimId} is not valid.`
                         });
                     }
                 }
                 case "ADMIN": default: {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
             }
         } else {
             return failed({
-                code: "NOT_FOUND",
-                param: 'claimId',
+                code: "NOT_FOUND", param: 'claimId',
                 msg: `The claim ${claimId} not found.`
             });
         }
@@ -184,8 +179,7 @@ export class ClaimContract extends BaseContract {
                 );
                 if (point === null || point.studentId !== this.currentPayload.id) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The point ${id} is not valid.`
                     });
                 }
@@ -212,8 +206,7 @@ export class ClaimContract extends BaseContract {
                     );
                 } else {
                     return failed({
-                        code: 'NOT_EXIST',
-                        param: 'id',
+                        code: 'NOT_EXIST', param: 'id',
                         msg: `The exam ${id} does not exist.`
                     });
                 }
@@ -223,8 +216,7 @@ export class ClaimContract extends BaseContract {
             return success(claim);
         } else {
             return failed({
-                code: 'NOT_ALLOWED',
-                param: 'type',
+                code: 'NOT_ALLOWED', param: 'type',
                 msg: "The claim type is not valid."
             });
         }
@@ -249,9 +241,8 @@ export class ClaimContract extends BaseContract {
             ctx, id, "CLAIM"
         );
         if (claim && claim.studentId === this.currentPayload.id) {
-            claim.status = "CANCELED";
+            claim.status = "CANCELED"; claim.note = note;
             claim.time = new Date().getTime() / 1000;
-            claim.note = note;
             claim.docType = "CLAIM";
             await ledger.putState(
                 ctx, this, claim.id,
@@ -261,8 +252,7 @@ export class ClaimContract extends BaseContract {
             return success(claim);
         } else {
             return failed({
-                code: 'NOT_ALLOWED',
-                param: 'id',
+                code: 'NOT_ALLOWED', param: 'id',
                 msg: `The claim ${id} is not valid.`
             });
         }
@@ -290,28 +280,24 @@ export class ClaimContract extends BaseContract {
                 );
                 if (claim === null) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The claim ${id} is not valid.`
                     });
                 }
                 if (claim.type === "COMPONENTS_POINT" && this.currentPayload.type === "EMPLOYEE") {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
                 if (claim.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
-                claim.status = "ACCEPTED";
+                claim.status = "ACCEPTED"; claim.note = note;
                 claim.time = new Date().getTime() / 1000;
-                claim.note = note;
                 claim.docType = "CLAIM";
                 await ledger.putState(
                     ctx, this, claim.id,
@@ -322,8 +308,7 @@ export class ClaimContract extends BaseContract {
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
