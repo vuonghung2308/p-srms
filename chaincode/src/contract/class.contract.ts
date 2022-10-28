@@ -69,7 +69,9 @@ export class ClassContract extends BaseContract {
                             }
                         )
                         if (record.teacherId === this.currentPayload.id ||
-                            (confirm && confirm.censorId1 === this.currentPayload.id)
+                            (confirm && (confirm.status === "INITIALIZED") &&
+                                confirm.censorId1 === this.currentPayload.id
+                            )
                         ) {
                             const values = await Promise.all([
                                 ledger.getState(ctx, record.subjectId, "SUBJECT"),
@@ -154,7 +156,7 @@ export class ClassContract extends BaseContract {
                 case "EMPLOYEE": { return success(cls); }
                 case "TEACHER": {
                     if (cls["teacher"].id === this.currentPayload.id ||
-                        confirm.censorId1 === this.currentPayload.id
+                        confirm["censor1"].id === this.currentPayload.id
                     ) { return success(cls); } else {
                         return failed({
                             code: "INCORRECT", param: 'classId',

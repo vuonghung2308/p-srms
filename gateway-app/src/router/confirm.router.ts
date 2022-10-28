@@ -37,7 +37,7 @@ confirmRouter.put(
         try {
             const data = await transaction.submit(
                 contract, 'Confirm:Create',
-                token, type, id,censorId, note
+                token, type, id, censorId, note
             );
             return handleTransactionRes(res, data);
         } catch (err) {
@@ -88,13 +88,10 @@ confirmRouter.post(
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(BAD_REQUEST).json({
-                status: "FAILED",
-                error: {
-                    code: "INVALID",
-                    msg: 'Invalid request body',
+                status: "FAILED", error: {
+                    code: "INVALID", msg: 'Invalid request body',
                     detail: errors.array(),
-                },
-                timestamp: new Date().toISOString(),
+                }, timestamp: new Date().toISOString(),
             });
         }
         const id: string = req.body.id;
@@ -103,7 +100,7 @@ confirmRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Confirm:Accept',
                 token, id, note
             );
@@ -137,7 +134,7 @@ confirmRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Confirm:Reject',
                 token, id, note
             );
@@ -156,13 +153,10 @@ confirmRouter.post(
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(BAD_REQUEST).json({
-                status: "FAILED",
-                error: {
-                    code: "INVALID",
-                    msg: 'Invalid request body',
+                status: "FAILED", error: {
+                    code: "INVALID", msg: 'Invalid request body',
                     detail: errors.array(),
-                },
-                timestamp: new Date().toISOString(),
+                }, timestamp: new Date().toISOString(),
             });
         }
         const id: string = req.body.id;
@@ -171,7 +165,7 @@ confirmRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Confirm:Done',
                 token, id, note
             );

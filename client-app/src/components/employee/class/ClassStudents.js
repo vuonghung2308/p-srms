@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getClass, getStudents } from "../../../api/class";
 import { Td, Th } from "../../../common/table";
 import useModal from "../../common/Modal/use";
+import HandleConfirm from "./AcceptConfirm";
 import AddStudent from "./AddStudent";
 
 
@@ -12,6 +13,24 @@ export function ClassStudents() {
     const [classRes, setClassRes] = useState({ status: "NONE" });
     const { isShowing, toggle } = useModal();
     let shouldFetch = useRef(true);
+    
+    const {
+        isShowing: isAcceptionShowing,
+        toggle: acceptionToggle
+    } = useModal();
+
+    const handleConfirm = (data) => {
+        setClassRes({
+            ...classRes, data: {
+                ...classRes.data,
+                confirm: data
+            }
+        })
+        setTimeout(() => {
+            alert("Xử lý yêu cầu thành công!")
+        }, 200);
+        acceptionToggle();
+    }
 
     useEffect(() => {
         if (shouldFetch.current) {
@@ -82,8 +101,20 @@ export function ClassStudents() {
                             })}
                         </tbody>
                     </table>
+                    {classRes.data && classRes.data.confirm &&
+                        classRes.data.confirm.censor1 &&
+                        classRes.data.confirm.status === "ACCEPTED" && (
+                            <>
+                                <button onClick={acceptionToggle}>Xử lý</button>
+                                <HandleConfirm
+                                    toggle={acceptionToggle}
+                                    isShowing={isAcceptionShowing}
+                                    confirm={classRes.data.confirm}
+                                    onSuccess={handleConfirm} />
+                            </>
+                        )
+                    }
                 </>
-
             )}
             <AddStudent
                 isShowing={isShowing} toggle={toggle}

@@ -136,7 +136,9 @@ export class ConfirmContract extends BaseContract {
                 ledger.getState(ctx, censorId, "TEACHER")
             ]);
 
-            if (currentConfirm && currentConfirm.status !== "CANCELED") {
+            if (currentConfirm && currentConfirm.status !== "CANCELED" &&
+                currentConfirm.status !== "REJECTED"
+            ) {
                 return failed({
                     code: "EXISTED", param: 'id',
                     msg: `The confirm for ${id} already exists`
@@ -157,6 +159,10 @@ export class ConfirmContract extends BaseContract {
                 type, note, status: "INITIALIZED",
                 docType: "CONFIRM", objectId: id,
                 censorId1: censorId, censorId2: null
+            }
+
+            if (currentConfirm) {
+                confirm.id = currentConfirm.id;
             }
 
             if (type === "COMPONENTS_POINT") {
@@ -277,7 +283,9 @@ export class ConfirmContract extends BaseContract {
                         msg: `The confirm ${id} is not valid.`
                     });
                 }
-                if (confirm.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
+                if (confirm.type === "EXAM_POINT" &&
+                    this.currentPayload.type === "TEACHER"
+                ) {
                     return failed({
                         code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
@@ -285,7 +293,7 @@ export class ConfirmContract extends BaseContract {
                 }
                 confirm.status = "ACCEPTED"; confirm.note = note;
                 confirm.time = new Date().getTime() / 1000;
-                confirm.docType = "CONFIRMED";
+                confirm.docType = "CONFIRM";
                 if (this.currentPayload.type === "EMPLOYEE") {
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
@@ -294,12 +302,22 @@ export class ConfirmContract extends BaseContract {
                         });
                     }
                     confirm.censorId2 = this.currentPayload.id
+                    const censor2 = await ledger.getState(
+                        ctx, confirm.censorId2, "TEACHER"
+                    );
+                    delete confirm.censorId2;
+                    confirm["censor2"] = censor2;
                 }
+                const censor1 = await ledger.getState(
+                    ctx, confirm.censorId1, "TEACHER"
+                );
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
                 delete confirm.docType;
+                delete confirm.censorId1;
+                confirm["censor1"] = censor1;
                 return success(confirm);
             }
             case "STUDENT": case "ADMIN": default: {

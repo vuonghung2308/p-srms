@@ -12,6 +12,39 @@ export async function cancelConfirm(
     });
 }
 
+export async function acceptConfirm(
+    confirmId, note
+) {
+    return send(`${baseUrl}/confirm/accept`, {
+        body: JSON.stringify({
+            id: confirmId, note
+        }),
+        method: 'POST',
+    });
+}
+
+export async function doneConfirm(
+    confirmId, note
+) {
+    return send(`${baseUrl}/confirm/done`, {
+        body: JSON.stringify({
+            id: confirmId, note
+        }),
+        method: 'POST',
+    });
+}
+
+export async function rejectConfirm(
+    confirmId, note
+) {
+    return send(`${baseUrl}/confirm/reject`, {
+        body: JSON.stringify({
+            id: confirmId, note
+        }),
+        method: 'POST',
+    });
+}
+
 export async function createConfirm(
     id, censorId, note, type
 ) {

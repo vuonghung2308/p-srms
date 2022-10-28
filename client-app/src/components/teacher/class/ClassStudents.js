@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getClass, getStudents, updatePoint } from "../../../api/class";
 import { PayloadContext } from "../../../common/token";
 import useModal from "../../common/Modal/use";
+import HandleConfirm from "./AcceptConfirm";
 import CancelConfirm from "./CancelConfirm";
 import CreateConfirm from "./CreateConfirm";
 
@@ -20,6 +21,10 @@ export function ClassStudents() {
     const {
         isShowing: isCreationShowing,
         toggle: creationToggle
+    } = useModal();
+    const {
+        isShowing: isAcceptionShowing,
+        toggle: acceptionToggle
     } = useModal();
 
     const shouldFetch = useRef(true);
@@ -72,16 +77,17 @@ export function ClassStudents() {
         cancelationToggle();
     }
 
-    const handleReject = () => {
-        // confirm(classId).then(res => {
-        //     setClassRes({
-        //         ...classRes,
-        //         data: {
-        //             ...classRes.data,
-        //             status: "CONFIRMED"
-        //         }
-        //     })
-        // });
+    const handleConfirm = (data) => {
+        setClassRes({
+            ...classRes, data: {
+                ...classRes.data,
+                confirm: data
+            }
+        })
+        setTimeout(() => {
+            alert("Xử lý yêu cầu thành công!")
+        }, 200);
+        acceptionToggle();
     }
 
     const handleCreationSuccess = (data) => {
@@ -102,7 +108,9 @@ export function ClassStudents() {
             <div className="py-4">
                 <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin lớp học</p>
                 {classRes.status === "SUCCESS" && (classRes.data.teacher.id === payload.id ? (
-                    (!classRes.data.confirm || classRes.data.confirm.status === "CANCELED") ? (
+                    (!classRes.data.confirm || classRes.data.confirm.status === "CANCELED" ||
+                        classRes.data.confirm.status === "REJECTED"
+                    ) ? (
                         <>
                             <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
                                 onClick={creationToggle}>
@@ -114,7 +122,7 @@ export function ClassStudents() {
                                 onSuccess={handleCreationSuccess}
                                 id={classRes.data.censor ? classRes.data.censor.id : ''} />
                         </>
-                    ) : (
+                    ) : classRes.status === "INITIALIZED" && (
                         <>
                             <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
                                 onClick={cancelationToggle}>
@@ -135,7 +143,7 @@ export function ClassStudents() {
                                 Phê duyệt
                             </Link>
                             <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                onClick={handleReject}>
+                                onClick={handleConfirm}>
                                 Từ chối
                             </Link>
                         </>
@@ -188,8 +196,9 @@ export function ClassStudents() {
                                 <th className="border-4 border-white">Điểm KT</th>
                                 <th className="border-4 border-white">Điểm Thi</th>
                                 {classRes.data && (classRes.data.teacher.id === payload.id &&
-                                    (classRes.data.confirm === null ||
-                                        classRes.data.confirm.status === "CANCELED"
+                                    (!classRes.data.confirm ||
+                                        (classRes.data.confirm && classRes.data.confirm.status === "CANCELED") ||
+                                        (classRes.data.confirm && classRes.data.confirm.status === "REJECTED")
                                     )
                                 ) && (<th className="border-4 border-white" />)}
                             </tr>
@@ -254,8 +263,9 @@ export function ClassStudents() {
                                         </td>
                                         <td className="text-center">{value.examPoint}</td>
                                         {classRes.data && (classRes.data.teacher.id === payload.id &&
-                                            (classRes.data.confirm === null ||
-                                                classRes.data.confirm.status === "CANCELED"
+                                            (!classRes.data.confirm ||
+                                                (classRes.data.confirm && classRes.data.confirm.status === "CANCELED") ||
+                                                (classRes.data.confirm && classRes.data.confirm.status === "REJECTED")
                                             )
                                         ) && (
                                                 <td className="text-center">
@@ -272,6 +282,19 @@ export function ClassStudents() {
                             })}
                         </tbody>
                     </table>
+                    {classRes.data && classRes.data.confirm &&
+                        classRes.data.confirm.censor1.id === payload.id &&
+                        classRes.data.confirm.status !== "ACCEPTED" && (
+                            <>
+                                <button onClick={acceptionToggle}>Xử lý</button>
+                                <HandleConfirm
+                                    toggle={acceptionToggle}
+                                    isShowing={isAcceptionShowing}
+                                    confirm={classRes.data.confirm}
+                                    onSuccess={handleConfirm} />
+                            </>
+                        )
+                    }
                 </>
             )}
         </>
