@@ -1,55 +1,36 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import ReactDOM from 'react-dom';
-import { searchTeacher } from "../../../api/teacher";
+import { cancelConfirm } from "../../../api/confirm";
 import { strTime } from "../../../ultils/time"
-import { createConfirm } from "../../../api/confirm";
 
 export default function CancelConfirm({
     isShowing, toggle, onSuccess, confirm
 }) {
     const [status, setStatus] = useState({ status: "NONE" });
-    // const [isShowingTeachers, setIsShowingTeachers] = useState(false);
-    // const [teacherRes, setTeacherRes] = useState([]);
-    // const [teacherId, setTeacherId] = useState("id");
-    // const [note, setNote] = useState("");
-    // const { classId } = useParams();
-
-    // const doSearchTeacher = (key) => {
-    //     searchTeacher(key).then(res =>
-    //         setTeacherRes(res)
-    //     );
-    // }
+    const [note, setNote] = useState("");
 
     useEffect(() => {
-    }, [isShowing])
+        if (note.length !== 0 || !isShowing) {
+            setStatus({ status: "NONE" });
+        }
+    }, [note, isShowing])
 
-    // useEffect(() => {
-    //     if (teacherId.length !== 0 && note.length !== 0) {
-    //         setStatus({ status: "NONE" })
-    //     }
-    // }, [teacherId, note])
-
-    // const handleRequest = async () => {
-    //     if (teacherId.length === 0 || note.length === 0) {
-    //         setStatus({
-    //             status: "FAILED",
-    //             message: "Mã giáo viên hoặc ghi chú bị bỏ trống."
-    //         });
-    //         return;
-    //     }
-    //     createConfirm(classId, teacherId, note, "COMPONENTS_POINT").then(res => {
-    //         if (res.status === "SUCCESS") {
-    //             setStatus({ status: "SUCCESS" })
-    //             onSuccess(res.data)
-    //         } else {
-    //             setStatus({
-    //                 status: "FAILED",
-    //                 message: "Cập nhật thất bại."
-    //             })
-    //         }
-    //     })
-    // }
+    const handleConfirmCancelation = async () => {
+        if (note.length === 0) {
+            setStatus({
+                status: "FAILED",
+                message: "Ghi chú không được bỏ trống."
+            })
+            return;
+        }
+        cancelConfirm(confirm.id, note).then(res => {
+            if (res.status === "SUCCESS") {
+                onSuccess(res.data);
+            } else {
+                setStatus(res.data);
+            }
+        })
+    }
 
     if (isShowing) {
         return ReactDOM.createPortal(
@@ -57,7 +38,7 @@ export default function CancelConfirm({
                 <div className={`bg-[#fefefe] w-[400px] mx-auto py-4 px-6 border rounded-xl shadow-2xl`}>
                     <div className="my-4 mx-4">
                         <div className="flex">
-                            <p className="font-semibold text-xl text-gray-600">Phê duyệt bảng điểm</p>
+                            <p className="mx-1 font-semibold text-xl text-gray-600">Hủy yêu cầu xác nhận</p>
                             <button className="ml-auto h-6 w-6 hover:text-red-dark rounded-[50%] bg-gray-100"
                                 onClick={() => {
                                     toggle()
@@ -65,14 +46,17 @@ export default function CancelConfirm({
                                 <i className="fa-solid fa-xmark" />
                             </button>
                         </div>
-                        <div className="mt-4">
-                            <p className="mt-1">Giáo viên xác nhận: {confirm.censorId1}</p>
+                        <div className="mt-4 mx-1">
+                            <p className="mt-1">Giáo viên xác nhận: {confirm.censor1.id} - {confirm.censor1.name}</p>
                             <p className="mt-1">Ngày yêu cầu: {strTime(confirm.time)}</p>
                             <p className="mt-1">Ghi chú: {confirm.note}</p>
                         </div>
 
-                        <button className="block ml-auto text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-6 rounded-lg mt-5"
-                            onClick={() => { }}>Hủy yêu cầu</button>
+                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
+                            placeholder="Ghi chú (lý do hủy)" value={note} onChange={e => setNote(e.target.value)} />
+
+                        <button className="w-full text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-6 rounded-lg mt-5"
+                            onClick={handleConfirmCancelation}>Xác nhận</button>
 
                         {status.status === "FAILED" ? (
                             <p className="text-red-500 font-semibold mt-3">

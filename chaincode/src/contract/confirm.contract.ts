@@ -47,8 +47,7 @@ export class ConfirmContract extends BaseContract {
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
@@ -80,8 +79,7 @@ export class ConfirmContract extends BaseContract {
                         confirm.censorId2 === null
                     ) {
                         return failed({
-                            code: "INVALID",
-                            param: 'confirmId',
+                            code: "INVALID", param: 'confirmId',
                             msg: `The confirm ${confirmId} is not valid.`
                         });
                     }
@@ -94,24 +92,21 @@ export class ConfirmContract extends BaseContract {
                         return success(confirm);
                     } else {
                         return failed({
-                            code: "INVALID",
-                            param: 'confirmId',
+                            code: "INVALID", param: 'confirmId',
                             msg: `The confirm ${confirmId} is not valid.`
                         });
                     }
                 }
                 case "STUDENT": case "ADMIN": default: {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
             }
         } else {
             return failed({
-                code: "NOT_FOUND",
-                param: 'confirmId',
+                code: "NOT_FOUND", param: 'confirmId',
                 msg: `The confirm ${confirmId} not found.`
             });
         }
@@ -134,21 +129,27 @@ export class ConfirmContract extends BaseContract {
         }
 
         if (type === "COMPONENTS_POINT" || type === "EXAM_POINT") {
-            const currentConfirms = await ledger.getStates(
-                ctx, "CONFIRM", async (record: Confirm) => {
+            const [currentConfirm, confirms, censor1] = await Promise.all([
+                ledger.getFirstState(ctx, "CONFIRM", async (record) => {
                     return record.objectId === id
-                }
-            )
-            if (currentConfirms.length === 1) {
+                }), ledger.getStates(ctx, "CONFIRM"),
+                ledger.getState(ctx, censorId, "TEACHER")
+            ]);
+
+            if (currentConfirm && currentConfirm.status !== "CANCELED") {
                 return failed({
-                    code: "EXISTED",
-                    param: 'id',
+                    code: "EXISTED", param: 'id',
                     msg: `The confirm for ${id} already exists`
                 });
             }
 
-            const confirms: Confirm[] = await ledger
-                .getStates(ctx, "CONFIRM");
+            if (censor1 === null) {
+                return failed({
+                    code: "NOT_EXIST", param: 'censorId',
+                    msg: `The teacher ${censorId} does not exist`
+                });
+            }
+
             const confirm: Confirm = {
                 id: `${confirms.length}.${id}`,
                 teacherId: this.currentPayload.id,
@@ -164,8 +165,7 @@ export class ConfirmContract extends BaseContract {
                 );
                 if (cls === null || cls.teacherId !== this.currentPayload.id) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The class ${id} is not valid.`
                     });
                 }
@@ -180,8 +180,7 @@ export class ConfirmContract extends BaseContract {
                 );
                 if (room === null || room.teacherId !== this.currentPayload.id) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The room ${id} is not valid.`
                     });
                 }
@@ -193,11 +192,12 @@ export class ConfirmContract extends BaseContract {
             }
 
             delete confirm.docType;
+            delete confirm.censorId1;
+            confirm['censor1'] = censor1;
             return success(confirm);
         } else {
             return failed({
-                code: 'NOT_ALLOWED',
-                param: 'type',
+                code: 'NOT_ALLOWED', param: 'type',
                 msg: "The confirm type is not valid."
             });
         }
@@ -223,14 +223,14 @@ export class ConfirmContract extends BaseContract {
         );
         if (confirm === null) {
             return failed({
-                code: 'NOT_EXIST',
-                param: 'id',
+                code: 'NOT_EXIST', param: 'id',
                 msg: `The confirm ${id} does not exist.`
             });
         }
-        const cls: Class = await ledger.getState(
-            ctx, confirm.objectId, "CLASS"
-        )
+        const [cls, censor1] = await Promise.all([
+            ledger.getState(ctx, confirm.objectId, "CLASS"),
+            ledger.getState(ctx, confirm.censorId1, "TEACHER"),
+        ]);
         if (cls !== null && cls.teacherId === this.currentPayload.id) {
             confirm.status = "CANCELED";
             confirm.time = new Date().getTime() / 1000;
@@ -241,11 +241,12 @@ export class ConfirmContract extends BaseContract {
                 confirm, confirm.docType
             )
             delete confirm.docType;
+            delete confirm.censorId1;
+            confirm['censor1'] = censor1;
             return success(confirm);
         } else {
             return failed({
-                code: 'NOT_ALLOWED',
-                param: 'token',
+                code: 'NOT_ALLOWED', param: 'token',
                 msg: `The token is not valid.`
             });
         }
@@ -273,15 +274,13 @@ export class ConfirmContract extends BaseContract {
                 );
                 if (confirm === null) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The confirm ${id} is not valid.`
                     });
                 }
                 if (confirm.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
@@ -292,8 +291,7 @@ export class ConfirmContract extends BaseContract {
                 if (this.currentPayload.type === "EMPLOYEE") {
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
-                            code: "NOT_ALLOWED",
-                            param: 'id',
+                            code: "NOT_ALLOWED", param: 'id',
                             msg: `The confirm ${id} must be confirmed by censor 1.`
                         });
                     }
@@ -308,8 +306,7 @@ export class ConfirmContract extends BaseContract {
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
@@ -339,15 +336,13 @@ export class ConfirmContract extends BaseContract {
                 );
                 if (confirm === null) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The confirm ${id} is not valid.`
                     });
                 }
                 if (confirm.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
@@ -364,8 +359,7 @@ export class ConfirmContract extends BaseContract {
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }
@@ -395,15 +389,13 @@ export class ConfirmContract extends BaseContract {
                 );
                 if (confirm === null) {
                     return failed({
-                        code: 'NOT_ALLOWED',
-                        param: 'id',
+                        code: 'NOT_ALLOWED', param: 'id',
                         msg: `The confirm ${id} is not valid.`
                     });
                 }
                 if (confirm.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
                     return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
+                        code: "NOT_ALLOWED", param: 'token',
                         msg: "You do not have permission"
                     });
                 }
@@ -420,8 +412,7 @@ export class ConfirmContract extends BaseContract {
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
-                    code: "NOT_ALLOWED",
-                    param: 'token',
+                    code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"
                 });
             }

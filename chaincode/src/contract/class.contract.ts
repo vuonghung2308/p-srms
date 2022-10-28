@@ -5,7 +5,6 @@ import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { Point } from "../vo/point";
 import { failed, success } from "../ledger/response";
-import { Request } from "../vo/request";
 import { Confirm } from "../vo/confirm";
 
 
@@ -132,8 +131,8 @@ export class ClassContract extends BaseContract {
             ])
             if (confirm) {
                 delete confirm.censorId1; delete confirm.censorId2;
-                if (censors[0]) confirm["censorId1"] = censors[0];
-                if (censors[1]) confirm["censorId2"] = censors[0];
+                if (censors[0]) confirm["censor1"] = censors[0];
+                if (censors[1]) confirm["censor2"] = censors[0];
                 cls['confirm'] = confirm;
             }
             delete cls.subjectId; cls["subject"] = subject;

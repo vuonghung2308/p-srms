@@ -59,8 +59,17 @@ export function ClassStudents() {
         }
     }
 
-    const handleCancelationSuccess = () => {
-        // cancelConfirm(confirm, note)
+    const handleCancelationSuccess = (data) => {
+        setClassRes({
+            ...classRes, data: {
+                ...classRes.data,
+                confirm: data
+            }
+        })
+        setTimeout(() => {
+            alert("Hủy yêu cầu thành công!")
+        }, 200);
+        cancelationToggle();
     }
 
     const handleReject = () => {
@@ -92,48 +101,46 @@ export function ClassStudents() {
         <>
             <div className="py-4">
                 <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin lớp học</p>
-                {classRes.status === "SUCCESS" && (
-                    classRes.data.teacher.id === payload.id ? (
-                        !classRes.data.confirm ? (
-                            <>
-                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                    onClick={creationToggle}>
-                                    Yêu cầu phê duyệt
-                                </Link>
-                                <CreateConfirm
-                                    toggle={creationToggle}
-                                    isShowing={isCreationShowing}
-                                    onSuccess={handleCreationSuccess}
-                                    id={classRes.data.censor ? classRes.data.censor.id : ''} />
-                            </>
-                        ) : (
-                            <>
-                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                    onClick={cancelationToggle}>
-                                    Hủy yêu cầu
-                                </Link>
-                                <CancelConfirm
-                                    toggle={cancelationToggle}
-                                    isShowing={isCancelationShowing}
-                                    onSuccess={handleCancelationSuccess}
-                                    confirm={classRes.data.confirm} />
-                            </>
-                        )
+                {classRes.status === "SUCCESS" && (classRes.data.teacher.id === payload.id ? (
+                    (!classRes.data.confirm || classRes.data.confirm.status === "CANCELED") ? (
+                        <>
+                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                                onClick={creationToggle}>
+                                Yêu cầu phê duyệt
+                            </Link>
+                            <CreateConfirm
+                                toggle={creationToggle}
+                                isShowing={isCreationShowing}
+                                onSuccess={handleCreationSuccess}
+                                id={classRes.data.censor ? classRes.data.censor.id : ''} />
+                        </>
                     ) : (
-                        classRes.data.confirm.status === "REQUESTED" && (
-                            <>
-                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                >
-                                    Phê duyệt
-                                </Link>
-                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                    onClick={handleReject}>
-                                    Từ chối
-                                </Link>
-                            </>
-                        )
+                        <>
+                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                                onClick={cancelationToggle}>
+                                Hủy yêu cầu
+                            </Link>
+                            <CancelConfirm
+                                toggle={cancelationToggle}
+                                isShowing={isCancelationShowing}
+                                onSuccess={handleCancelationSuccess}
+                                confirm={classRes.data.confirm} />
+                        </>
                     )
-                )}
+                ) : (
+                    classRes.data.confirm.status === "REQUESTED" && (
+                        <>
+                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                            >
+                                Phê duyệt
+                            </Link>
+                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                                onClick={handleReject}>
+                                Từ chối
+                            </Link>
+                        </>
+                    )
+                ))}
 
             </div>
             <hr />

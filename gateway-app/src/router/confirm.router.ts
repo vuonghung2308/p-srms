@@ -69,7 +69,7 @@ confirmRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Confirm:Cancel',
                 token, id, note
             );
