@@ -28,7 +28,7 @@ export class RoomContract extends BaseContract {
         switch (this.currentPayload.type) {
             case "TEACHER": {
                 rooms = await ledger.getStates(
-                    ctx, "ROOM", true, async (record: Room) => {
+                    ctx, "ROOM", async (record: Room) => {
                         const values = await Promise.all([
                             ledger.getState(ctx, record.teacherId, "TEACHER"),
                             ledger.getState(ctx, record.subjectId, "SUBJECT")
@@ -42,7 +42,7 @@ export class RoomContract extends BaseContract {
             }
             case "EMPLOYEE": {
                 rooms = await ledger.getStates(
-                    ctx, "ROOM", true, async (record: Room) => {
+                    ctx, "ROOM", async (record: Room) => {
                         const values = await Promise.all([
                             ledger.getState(ctx, record.teacherId, "TEACHER"),
                             ledger.getState(ctx, record.subjectId, "SUBJECT")

@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { getClass, getStudents, updatePoint } from "../../../api/class";
 import { PayloadContext } from "../../../common/token";
 import useModal from "../../common/Modal/use";
-import CreateRequest from "./Request";
+import CancelConfirm from "./CancelConfirm";
+import CreateConfirm from "./CreateConfirm";
 
 export function ClassStudents() {
     const payload = useContext(PayloadContext);
@@ -12,7 +13,14 @@ export function ClassStudents() {
     const [classRes, setClassRes] = useState({ status: "NONE" });
     const [selectedPoint, setSelectedPoint] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const { isShowing, toggle } = useModal();
+    const {
+        isShowing: isCancelationShowing,
+        toggle: cancelationToggle
+    } = useModal();
+    const {
+        isShowing: isCreationShowing,
+        toggle: creationToggle
+    } = useModal();
 
     const shouldFetch = useRef(true);
 
@@ -51,16 +59,8 @@ export function ClassStudents() {
         }
     }
 
-    const handleConfirm = () => {
-        // confirm(classId).then(res => {
-        //     setClassRes({
-        //         ...classRes,
-        //         data: {
-        //             ...classRes.data,
-        //             status: "CONFIRMED"
-        //         }
-        //     })
-        // });
+    const handleCancelationSuccess = () => {
+        // cancelConfirm(confirm, note)
     }
 
     const handleReject = () => {
@@ -75,11 +75,17 @@ export function ClassStudents() {
         // });
     }
 
-    const handleRequestSuccess = (data) => {
+    const handleCreationSuccess = (data) => {
+        setClassRes({
+            ...classRes, data: {
+                ...classRes.data,
+                confirm: data
+            }
+        })
         setTimeout(() => {
             alert("Lưu yêu cầu thành công!")
         }, 200);
-        toggle();
+        creationToggle();
     }
 
     return (
@@ -88,24 +94,36 @@ export function ClassStudents() {
                 <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin lớp học</p>
                 {classRes.status === "SUCCESS" && (
                     classRes.data.teacher.id === payload.id ? (
-                        classRes.data.status !== "CONFIRMED" && (
+                        !classRes.data.confirm ? (
                             <>
                                 <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                    onClick={toggle}>
+                                    onClick={creationToggle}>
                                     Yêu cầu phê duyệt
                                 </Link>
-                                <CreateRequest
-                                    isShowing={isShowing}
-                                    toggle={toggle}
-                                    onSuccess={handleRequestSuccess}
+                                <CreateConfirm
+                                    toggle={creationToggle}
+                                    isShowing={isCreationShowing}
+                                    onSuccess={handleCreationSuccess}
                                     id={classRes.data.censor ? classRes.data.censor.id : ''} />
+                            </>
+                        ) : (
+                            <>
+                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                                    onClick={cancelationToggle}>
+                                    Hủy yêu cầu
+                                </Link>
+                                <CancelConfirm
+                                    toggle={cancelationToggle}
+                                    isShowing={isCancelationShowing}
+                                    onSuccess={handleCancelationSuccess}
+                                    confirm={classRes.data.confirm} />
                             </>
                         )
                     ) : (
-                        classRes.data.status === "REQUESTED" && (
+                        classRes.data.confirm.status === "REQUESTED" && (
                             <>
                                 <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                    onClick={handleConfirm}>
+                                >
                                     Phê duyệt
                                 </Link>
                                 <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
@@ -162,7 +180,11 @@ export function ClassStudents() {
                                 <th className="border-4 border-white">Điểm BT</th>
                                 <th className="border-4 border-white">Điểm KT</th>
                                 <th className="border-4 border-white">Điểm Thi</th>
-                                <th className="border-4 border-white" />
+                                {classRes.data && (classRes.data.teacher.id === payload.id &&
+                                    (classRes.data.confirm === null ||
+                                        classRes.data.confirm.status === "CANCELED"
+                                    )
+                                ) && (<th className="border-4 border-white" />)}
                             </tr>
                         </thead>
                         <tbody>
@@ -224,12 +246,20 @@ export function ClassStudents() {
                                             ) : (value.midtermExamPoint)}
                                         </td>
                                         <td className="text-center">{value.examPoint}</td>
-                                        <td className="text-center">
-                                            <Link className="text-blue-600 hover:text-blue-600 hover:underline"
-                                                onClick={() => handleSelectedPoint(value)}>
-                                                {isEditing && value.id === selectedPoint.id ? "Lưu" : "Sửa"}
-                                            </Link>
-                                        </td>
+                                        {classRes.data && (classRes.data.teacher.id === payload.id &&
+                                            (classRes.data.confirm === null ||
+                                                classRes.data.confirm.status === "CANCELED"
+                                            )
+                                        ) && (
+                                                <td className="text-center">
+                                                    <Link className="text-blue-600 hover:text-blue-600 hover:underline"
+                                                        onClick={() => handleSelectedPoint(value)}>
+                                                        {isEditing && value.id === selectedPoint.id ? "Lưu" : "Sửa"}
+                                                    </Link>
+                                                </td>
+                                            )
+                                        }
+
                                     </tr>
                                 );
                             })}

@@ -3,7 +3,6 @@ import { BaseContract } from "./contract";
 import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { failed, success } from "../ledger/response";
-import { Claim } from "../vo/claim";
 import { Class } from "../vo/class";
 import { Confirm } from "../vo/confirm";
 import { Room } from "../vo/room";
@@ -30,8 +29,7 @@ export class ConfirmContract extends BaseContract {
         switch (this.currentPayload.type) {
             case "EMPLOYEE": {
                 confirms = await ledger.getStates(
-                    ctx, "CONFIRM", true,
-                    async (record: Confirm) => {
+                    ctx, "CONFIRM", async (record: Confirm) => {
                         return record.censorId2 === this.currentPayload.id ||
                             record.censorId2 === null
                     }
@@ -40,8 +38,7 @@ export class ConfirmContract extends BaseContract {
             }
             case "TEACHER": {
                 confirms = await ledger.getStates(
-                    ctx, "CONFIRM", true,
-                    async (record: Confirm) => {
+                    ctx, "CONFIRM", async (record: Confirm) => {
                         return record.censorId1 === this.currentPayload.id ||
                             record.teacherId === this.currentPayload.id
                     }
@@ -138,7 +135,7 @@ export class ConfirmContract extends BaseContract {
 
         if (type === "COMPONENTS_POINT" || type === "EXAM_POINT") {
             const currentConfirms = await ledger.getStates(
-                ctx, "CONFIRM", true, async (record: Claim) => {
+                ctx, "CONFIRM", async (record: Confirm) => {
                     return record.objectId === id
                 }
             )
@@ -157,7 +154,7 @@ export class ConfirmContract extends BaseContract {
                 teacherId: this.currentPayload.id,
                 time: (new Date().getTime() / 1000),
                 type, note, status: "INITIALIZED",
-                docType: "CLAIM", objectId: id,
+                docType: "CONFIRM", objectId: id,
                 censorId1: censorId, censorId2: null
             }
 
@@ -291,7 +288,7 @@ export class ConfirmContract extends BaseContract {
                 confirm.status = "ACCEPTED";
                 confirm.time = new Date().getTime() / 1000;
                 confirm.note = note;
-                confirm.docType = "CONFIRM";
+                confirm.docType = "CONFIRMED";
                 if (this.currentPayload.type === "EMPLOYEE") {
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
@@ -400,7 +397,7 @@ export class ConfirmContract extends BaseContract {
                     return failed({
                         code: 'NOT_ALLOWED',
                         param: 'id',
-                        msg: `The claim ${id} is not valid.`
+                        msg: `The confirm ${id} is not valid.`
                     });
                 }
                 if (confirm.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
@@ -413,7 +410,7 @@ export class ConfirmContract extends BaseContract {
                 confirm.status = "DONE";
                 confirm.time = new Date().getTime() / 1000;
                 confirm.note = note;
-                confirm.docType = "CLAIM";
+                confirm.docType = "CONFIRM";
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType

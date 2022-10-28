@@ -29,8 +29,7 @@ export class ClaimContract extends BaseContract {
         switch (this.currentPayload.type) {
             case "STUDENT": {
                 claims = await ledger.getStates(
-                    ctx, "CLAIM", true,
-                    async (record: Claim) => {
+                    ctx, "CLAIM", async (record: Claim) => {
                         return record.studentId === this.currentPayload.id
                     }
                 );
@@ -38,8 +37,7 @@ export class ClaimContract extends BaseContract {
             }
             case "EMPLOYEE": {
                 claims = await ledger.getStates(
-                    ctx, "CLAIM", true,
-                    async (record: Claim) => {
+                    ctx, "CLAIM", async (record: Claim) => {
                         return record.type === "EXAM_POINT"
                     }
                 );
@@ -47,8 +45,7 @@ export class ClaimContract extends BaseContract {
             }
             case "TEACHER": {
                 claims = await ledger.getStates(
-                    ctx, "CLAIM", true,
-                    async (record: Claim) => {
+                    ctx, "CLAIM", async (record: Claim) => {
                         if (record.type === "COMPONENTS_POINT") {
                             const point: Point = await ledger.getState(
                                 ctx, record.objectId, "POINT"
@@ -156,10 +153,10 @@ export class ClaimContract extends BaseContract {
                 msg: status.msg
             });
         }
-        
+
         if (type === "COMPONENTS_POINT" || type === "EXAM_POINT") {
             const currentClaims = await ledger.getStates(
-                ctx, "CLAIM", true, async (record: Claim) => {
+                ctx, "CLAIM", async (record: Claim) => {
                     return record.objectId === id
                 }
             )
@@ -170,7 +167,7 @@ export class ClaimContract extends BaseContract {
                     msg: `The claim for ${id} already exists`
                 });
             }
-            
+
             const claims: Claim[] = await ledger
                 .getStates(ctx, "CLAIM");
             const claim: Claim = {
@@ -200,8 +197,8 @@ export class ClaimContract extends BaseContract {
             } else {
                 const [exam, points] = await Promise.all([
                     ledger.getState(ctx, id, "EXAMP"),
-                    ledger.getStates(ctx, "POINT", true,
-                        async (record: Point) => {
+                    ledger.getStates(
+                        ctx, "POINT", async (record: Point) => {
                             return record.studentId === this.currentPayload.id &&
                                 record.examId === id
                         }

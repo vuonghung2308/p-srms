@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ReactDOM from 'react-dom';
 import { searchTeacher } from "../../../api/teacher";
-import { request } from "../../../api/confirm";
+import { createConfirm } from "../../../api/confirm";
 
-export default function CreateRequest({ isShowing, toggle, onSuccess, id }) {
+export default function CreateConfirm({
+    isShowing, toggle, onSuccess, id
+}) {
     const [status, setStatus] = useState({ status: "NONE" });
     const [isShowingTeachers, setIsShowingTeachers] = useState(false);
     const [teacherRes, setTeacherRes] = useState([]);
@@ -32,7 +34,6 @@ export default function CreateRequest({ isShowing, toggle, onSuccess, id }) {
         if (teacherId.length !== 0 && note.length !== 0) {
             setStatus({ status: "NONE" })
         }
-        console.log(`${teacherId.length} ${note.length}`);
     }, [teacherId, note])
 
     const handleRequest = async () => {
@@ -43,7 +44,7 @@ export default function CreateRequest({ isShowing, toggle, onSuccess, id }) {
             });
             return;
         }
-        request(classId, teacherId, note, "COMPONENTS_POINT").then(res => {
+        createConfirm(classId, teacherId, note, "COMPONENTS_POINT").then(res => {
             if (res.status === "SUCCESS") {
                 setStatus({ status: "SUCCESS" })
                 onSuccess(res.data)

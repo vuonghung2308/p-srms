@@ -2,9 +2,42 @@ import { Context } from "fabric-contract-api";
 import { BaseContract } from "../contract/contract";
 import * as utils from "../utils/utils";
 
+
+export const getFirstState = async (
+    ctx: Context, docType: string,
+    filter: (record: any) => Promise<boolean>,
+    removeDocType: boolean = true
+): Promise<any> => {
+    const iterator = await ctx.stub.getStateByRange('', '');
+    let result = await iterator.next();
+    while (!result.done) {
+        const strValue = Buffer.from(
+            result.value.value
+        ).toString('utf-8');
+        try {
+            const record = JSON.parse(strValue);
+            if (record.docType !== docType) {
+                result = await iterator.next();
+                continue;
+            }
+            if (removeDocType) {
+                delete record.docType;
+            }
+            if (await filter(record)) {
+                return record;
+            }
+        } catch (err) {
+            console.log(err);
+        }
+        result = await iterator.next();
+    }
+    return null;
+}
+
 export const getStates = async (
-    ctx: Context, docType: string, removeDocType: boolean = true,
-    filler: (record: any) => Promise<boolean> = null
+    ctx: Context, docType: string,
+    filer: (record: any) => Promise<boolean> = null,
+    removeDocType: boolean = true
 ): Promise<any> => {
     const results = [];
     const iterator = await ctx.stub.getStateByRange('', '');
@@ -26,8 +59,8 @@ export const getStates = async (
         } catch (err) {
             console.log(err);
         }
-        if (filler) {
-            if (await filler(record)) {
+        if (filer) {
+            if (await filer(record)) {
                 results.push(record);
             }
         } else {

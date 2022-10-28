@@ -114,9 +114,7 @@ export class PointContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const result = await this.getStudentPoint(
-            ctx, this.currentPayload.id
-        );
+        const result = await this.getStudentPoint(ctx);
         return success(result);
     }
 
@@ -137,18 +135,16 @@ export class PointContract extends BaseContract {
         const student = await ledger.getState(
             ctx, this.currentPayload.id, "STUDENT"
         );
-        const result = await this.getStudentPoint(
-            ctx, this.currentPayload.id
-        );
+        const result = await this.getStudentPoint(ctx);
         return success({
             ...result,
             student: student
         });
     }
 
-    private async getStudentPoint(ctx: Context, studentId: string): Promise<any> {
+    private async getStudentPoint(ctx: Context): Promise<any> {
         const classes: Class[] = [];
-        const points = await ledger.getStates(ctx, "POINT", true, async (record: Point) => {
+        const points = await ledger.getStates(ctx, "POINT", async (record: Point) => {
             if (record.studentId === this.currentPayload.id) {
                 const exam: Exam = await ledger.getState(ctx, record.examId, "EXAM");
                 const cls: Class = await ledger.getState(ctx, record.classId, "CLASS");

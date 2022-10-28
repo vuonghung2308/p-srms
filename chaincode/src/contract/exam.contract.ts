@@ -30,8 +30,7 @@ export class ExamContract extends BaseContract {
         switch (this.currentPayload.type) {
             case "TEACHER": case "EMPLOYEE": {
                 const exams = await ledger.getStates(
-                    ctx, "EXAM", true,
-                    async (record) => {
+                    ctx, "EXAM", async (record) => {
                         if (record.roomId === roomId) {
                             const student = await ledger.getState(
                                 ctx, record.studentId, "STUDENT"
@@ -204,8 +203,7 @@ export class ExamContract extends BaseContract {
         ctx: Context, code: string
     ): Promise<Exam> {
         let exams = await ledger.getStates(
-            ctx, "EXAM", true,
-            async (record: Exam) => {
+            ctx, "EXAM", async (record: Exam) => {
                 return record.code === code;
             }
         );
@@ -219,8 +217,7 @@ export class ExamContract extends BaseContract {
         month: number, date: number
     ): Promise<string> {
         const exams = await ledger.getStates(
-            ctx, "EXAM", true,
-            async (record: Exam) => {
+            ctx, "EXAM", async (record: Exam) => {
                 const room: Room = await ledger.getState(
                     ctx, record.roomId, "ROOM"
                 );
@@ -241,8 +238,7 @@ export class ExamContract extends BaseContract {
         year: number, semester: string
     ): Promise<Class[]> {
         let classes: Class[] = await ledger.getStates(
-            ctx, "CLASS", true,
-            async (record: Class) => {
+            ctx, "CLASS", async (record: Class) => {
                 return record.year === year &&
                     record.semester === semester &&
                     record.subjectId === subjectId;
