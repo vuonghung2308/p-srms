@@ -74,7 +74,7 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                     <div className="flex">
                         <p className="my-auto">Mã lớp:</p>
                         <input
-                            className=" ml-auto text-gray-700 rounded border outline-none border-gray-400 px-2.5 py-0.5 focus:border-red-normal"
+                            className=" ml-auto text-gray-700 rounded-lg border outline-none border-gray-400 px-2.5 py-1 focus:border-red-normal"
                             value={classId} onChange={e =>
                                 setClassId(e.target.value)
                             } />
@@ -90,9 +90,9 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                                 }}
                                 onFocus={() => setIsShowingTeacher(true)}
                                 onBlur={() => setIsShowingTeacher(false)}
-                                className="text-gray-700 rounded w-full border outline-none border-gray-400 px-2.5 py-0.5 focus:border-red-normal" />
+                                className="text-gray-700 rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1 focus:border-red-normal" />
                             {isShowingTeachers && (
-                                <div className='mt-0.5 bg-white absolute shadow-2xl rounded w-[204px] border'>
+                                <div className='mt-0.5 bg-white absolute shadow-lg rounded-lg w-[204px] border'>
                                     {teacherRes.data.map((value, index) => (
                                         <div key={value.id}>
                                             <button className='text-start hover:bg-gray-200 w-[100%]'
@@ -127,9 +127,9 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                                 }}
                                 onFocus={() => setIsShowingSubject(true)}
                                 onBlur={() => setIsShowingSubject(false)}
-                                className="text-gray-700 rounded w-full border outline-none border-gray-400 px-2.5 py-0.5 focus:border-red-normal" />
+                                className="text-gray-700 rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1 focus:border-red-normal" />
                             {isShowingSubjects && (
-                                <div className='mt-0.5 bg-white absolute shadow-2xl rounded w-[204px] border'>
+                                <div className='mt-0.5 bg-white absolute shadow-lg rounded-lg w-[204px] border'>
                                     {subjectRes.data.map((value, index) => (
                                         <div key={value.id}>
                                             <button className='text-start hover:bg-gray-200 w-[100%]'
@@ -158,7 +158,7 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                         <div className="ml-auto">
                             <input
                                 type="number" value={year} onChange={e => setYear(e.target.value)}
-                                className="w-20 text-gray-700 rounded border outline-none border-gray-400 pl-2.5 py-0.5 focus:border-red-normal" />
+                                className="w-20 text-gray-700 rounded-lg border outline-none border-gray-400 pl-2.5 py-1 focus:border-red-normal" />
                             <div className="w-20 inline-block ml-1.5 mr-9">{" - "}{year && (Number(year) + 1)}</div>
                         </div>
                     </div>
@@ -167,7 +167,7 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                 <div className="mt-3">
                     <span className="mr-12">Kỳ học:</span>
                     <select value={semester} onChange={e => setSemester(e.target.value)}
-                        className="border rounded px-2 py-0.5 ml-3 text-gray-700  outline-none border-gray-400  focus:border-red-normal">
+                        className="border rounded-lg px-2 py-1 ml-3 text-gray-700  outline-none border-gray-400  focus:border-red-normal">
                         <option value="I">I</option>
                         <option value="II">II</option>
                         <option value="III">III</option>
@@ -182,10 +182,11 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                 ) : status.status === "FAILED" ? (
                     <p className="text-red-500 font-semibold mt-2">{status.message}</p>
                 ) : (<p className="mt-2" />)}
-                <div className="text-end mt-5">
-                    <button
-                        className="text-white font-semibold bg-red-normal hover:bg-red-dark px-4 py-0.5 rounded-lg"
-                        onClick={handleAddClass}>Thêm</button>
+                <div className="block text-end">
+                    <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg mt-2"
+                        onClick={toggle}>Hủy</button>
+                    <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg mt-2"
+                        onClick={handleAddClass}>Tiếp tục</button>
                 </div>
             </div>
         </Modal>
