@@ -3,8 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { getClass, getStudents } from "../../../api/class";
 import { strTime } from "../../../ultils/time";
 import useModal from "../../common/Modal/use";
-import HandleConfirm from "./AcceptConfirm";
+import AcceptConfirm from "./AcceptConfirm";
 import AddStudent from "./AddStudent";
+import RejectConfirm from "./RejectConfirm";
 
 
 export function ClassStudents() {
@@ -12,24 +13,48 @@ export function ClassStudents() {
     const [studentsRes, setStudentsRes] = useState({ status: "NONE" });
     const [classRes, setClassRes] = useState({ status: "NONE" });
     const { isShowing, toggle } = useModal();
+    const confirmId = useRef('');
     let shouldFetch = useRef(true);
 
     const {
         isShowing: isAcceptionShowing,
-        toggle: acceptionToggle
+        toggle: acceptanceToggle
     } = useModal();
 
-    const handleConfirm = (data) => {
+    const {
+        isShowing: isRejectionShowing,
+        toggle: rejectionToggle
+    } = useModal();
+
+    const handleAcceptanceConfirm = (data) => {
+        const confirms = classRes.data.confirms;
         setClassRes({
-            ...classRes, data: {
-                ...classRes.data,
-                confirm: data
-            }
-        })
+            ...classRes,
+            confirms: [
+                ...confirms, data
+            ]
+        });
         setTimeout(() => {
             alert("Xử lý yêu cầu thành công!")
         }, 200);
-        acceptionToggle();
+        acceptanceToggle();
+    }
+
+    const handleRejectionConfirm = (data) => {
+        const confirms = classRes.data.confirms;
+        setClassRes({
+            ...classRes,
+            data: {
+                ...classRes.data,
+                confirms: [
+                    data, ...confirms
+                ]
+            }
+        });
+        setTimeout(() => {
+            alert("Xử lý yêu cầu thành công!")
+        }, 200);
+        rejectionToggle();
     }
 
     useEffect(() => {
@@ -38,11 +63,14 @@ export function ClassStudents() {
             getStudents(classId).then(res =>
                 setStudentsRes(res)
             );
-            getClass(classId).then(res =>
+            getClass(classId).then(res => {
                 setClassRes(res)
-            );
+                if (res.data.confirms) {
+                    confirmId.current = res.data.confirms[0].id
+                }
+            });
         }
-    }, [classId])
+    }, [classId]);
 
     return (
         <>
@@ -70,7 +98,23 @@ export function ClassStudents() {
             {studentsRes.status === "SUCCESS" && studentsRes.data.length > 0 && (
                 <>
                     <hr className="my-3" />
-                    <p className="font-semibold text-xl text-gray-600">Danh sách sinh viên</p>
+                    <div className="flex">
+                        <p className="font-semibold text-xl text-gray-600">Bảng điểm thành phần</p>
+                        {classRes.data && classRes.data.confirms && classRes.data.confirms[0].status === "ACCEPTED" && (
+                            <>
+                                <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                    onClick={rejectionToggle}>
+                                    <i className="my-auto text-xs fa-solid fa-ban" />
+                                    <p className="ml-2 my-auto">Từ chối</p>
+                                </button>
+                                <button className="mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                    onClick={acceptanceToggle}>
+                                    <i className="my-auto text-xs fa-solid fa-check" />
+                                    <p className="ml-2 my-auto">Duyệt</p>
+                                </button>
+                            </>
+                        )}
+                    </div>
                     <table className="mt-3 w-[100%]">
                         <thead>
                             <tr className="bg-gray-200 text-gray-600">
@@ -101,53 +145,24 @@ export function ClassStudents() {
                             })}
                         </tbody>
                     </table>
-                    {classRes.data && (
-                        <div className="my-4">
-                            <div className="flex">
-                                <p className="mr-4 text-lg font-semibold text-gray-600">Xác nhận bảng điểm thành phần</p>
-                                <>
-                                    {(classRes.data.confirm && classRes.data.confirm.status === "ACCEPTED") && (
-                                        <>
-                                            <button className="h-fit my-auto flex border text-sm hover:border-red-dark px-2 text-gray-500 font-semibold rounded hover:text-red-dark"
-                                                onClick={acceptionToggle} >
-                                                <p className="my-auto">Xử lý yêu cầu</p>
-                                                <i className="my-auto pl-2 fa-solid fa-arrow-right" />
-                                            </button>
-                                            <HandleConfirm
-                                                toggle={acceptionToggle}
-                                                isShowing={isAcceptionShowing}
-                                                confirm={classRes.data.confirm}
-                                                teacher={classRes.data.teacher}
-                                                onSuccess={handleConfirm} />
-                                        </>
-                                    )}
-                                </>
-                            </div>
-                            {classRes.data.confirm && classRes.data.confirm.status !== "CANCELED" && (
-                                <div className="flex">
-                                    <div className="w-[50%]">
-                                        <p className="mt-2">GV yêu cầu: {classRes.data.teacher.name} - ID: {classRes.data.teacher.id}</p>
-                                        <p className="mt-1">Thời gian tạo: {strTime(classRes.data.confirm.time)}</p>
-                                    </div>
-                                    <div className="w-[50%] ml-20">
-                                        {classRes.data.confirm.status === "INITIALIZED" && (
-                                            <p className="mt-1">Trạng thái: chờ duyệt</p>
-                                        )}
-                                        {classRes.data.confirm.status === "ACCEPTED" && (
-                                            <p className="mt-1">Trạng thái: đã duyệt</p>
-                                        )}
-                                        {classRes.data.confirm.status === "DONE" && (
-                                            <p className="mt-1">Trạng thái: đã duyệt</p>
-                                        )}
-                                        {classRes.data.confirm.status === "REJECTED" && (
-                                            <p className="mt-1">Trạng thái: bị từ chối</p>
-                                        )}
-                                        <p className="mt-1">Ghi chú: {classRes.data.confirm.note}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                    {classRes.data && classRes.data.confirms && (
+                        classRes.data.confirms.map((confirm, index) => (
+                            <Confirm
+                                confirm={confirm} teacher={classRes.data.teacher} key={confirm.id + index}
+                                isLast={index === classRes.data.confirms.length - 1}
+                                onAcceptClicked={acceptanceToggle} onRejectClicked={rejectionToggle} />
+                        ))
                     )}
+                    <RejectConfirm
+                        toggle={rejectionToggle}
+                        isShowing={isRejectionShowing}
+                        confirmId={confirmId.current}
+                        onSuccess={handleRejectionConfirm} />
+                    <AcceptConfirm
+                        toggle={acceptanceToggle}
+                        isShowing={isAcceptionShowing}
+                        confirmId={confirmId.current}
+                        onSuccess={handleAcceptanceConfirm} />
                 </>
             )}
             <AddStudent
@@ -160,4 +175,55 @@ export function ClassStudents() {
                 }} />
         </>
     );
+}
+
+const Confirm = ({ teacher, confirm }) => {
+    return (
+        <div className="mx-4 mt-4">
+            <div className="flex">
+                {confirm.status === "INITIALIZED" && (
+                    <div className="flex">
+                        <p className="text font-semibold text-gray-500">Yêu cầu duyệt bảng điểm</p>
+                        <p className="ml-2 text-sm my-auto">tới: {confirm.censor1.name} ({confirm.censor1.id})</p>
+                    </div>
+                )}
+                {confirm.status === "CANCELED" && (
+                    <p className="text font-semibold text-gray-500">Hủy yêu cầu duyệt bảng điểm</p>
+                )}
+                {confirm.status === "ACCEPTED" && (
+                    <p className="text font-semibold text-gray-500">Đã duyệt bảng điểm</p>
+                )}
+                {confirm.status.includes("REJECTED") && (
+                    <p className="text font-semibold text-gray-500">Đã từ chối bảng điểm</p>
+                )}
+
+                <div className="ml-auto my-auto flex text-sm rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
+                    <i className="text-xs my-auto mr-2 fa-regular fa-clock" />
+                    <p>{strTime(confirm.time)}</p>
+                </div>
+            </div>
+            <div className="flex mt-2">
+                <div className="flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-600">
+                    <i className="text-xs my-auto fa-solid fa-user mr-2" />
+                    {(confirm.status === "INITIALIZED" || confirm.status === "CANCELED") && (
+                        <p>{teacher.name} ({teacher.id})</p>
+                    )}
+                    {confirm.status === "ACCEPTED" && (
+                        <p>{confirm.censor1.name} ({confirm.censor1.id})</p>
+                    )}
+                    {confirm.status === "E_REJECTED" && (
+                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
+                    )}
+                    {confirm.status === "T_REJECTED" && (
+                        <p>{confirm.censor1.name} ({confirm.censor1.id})</p>
+                    )}
+                </div>
+                <div className="ml-4 flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
+                    <i className="text-xs my-auto mr-2 fa-regular fa-note-sticky"></i>
+                    <p>{confirm.note}</p>
+                </div>
+            </div>
+            <div className=" mt-4 rounded-lg bg-[#f2f3f5] w-full h-[2px]" />
+        </div>
+    )
 }

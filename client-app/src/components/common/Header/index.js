@@ -32,7 +32,7 @@ const Header = () => {
                                     <p className={`inline-block ${isHovered && 'text-red-dark'}`}>Tài khoản</p>
                                 </Link>
                                 {isMenuShowing && (
-                                    <div className="absolute text-start bg-white border border-gray-200 rounded shadow-lg mt-2 -ml-10">
+                                    <div className="absolute text-start bg-white border border-gray-200 rounded-lg shadow-lg mt-2 -ml-10">
                                         <Link className="block ml-4 mr-10 my-2 text-gray-500 hover:text-red-dark"
                                             onMouseDown={() => setTimeout(() => navigate(''), 200)}>
                                             Tài khoản của tôi

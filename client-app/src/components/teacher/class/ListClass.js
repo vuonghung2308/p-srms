@@ -51,10 +51,11 @@ export function ListClass() {
                                     <td className="text-center">{value.subject.numberOfCredit}</td>
                                     <td className="text-center">{value.year}-{value.year + 1}</td>
                                     <td className="text-center">{value.semester}</td>
-                                    <td className="text-center">
-                                        <Link className="text-blue-600 hover:text-blue-600 hover:underline"
+                                    <td >
+                                        <Link className="mx-auto w-fit flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
                                             to={`${value.id}`}>
-                                            Chi tiết
+                                            <p className="h-fit">Chi tiết</p>
+                                            <i className="fa-solid fa-caret-down my-auto ml-1" />
                                         </Link>
                                     </td>
                                 </tr>

@@ -15,8 +15,6 @@ export class Confirm {
     @Property()
     public censorId2: string;
     @Property()
-    public time: number;
-    @Property()
     public type: string;
     @Property()
     public status: string;

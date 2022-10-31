@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { addExam } from "../../../api/room";
 import { searchStudent } from "../../../api/student";
-import Modal from "../../common/Modal";
+import ReactDOM from 'react-dom';
 
 export default function AddExam({ isShowing, toggle, onSuccess }) {
     const [status, setStatus] = useState({ status: "NONE" });
@@ -49,62 +49,73 @@ export default function AddExam({ isShowing, toggle, onSuccess }) {
             setStudentId('');
         });
     }
-    const modal = (
-        <Modal isShowing={isShowing}>
-            <div className="mb-4">
-                <div className="flex">
-                    <p className="font-semibold text-xl text-gray-600">Thêm sinh viên</p>
-                    <button className="ml-auto h-6 w-6 hover:text-red-dark rounded-[50%] bg-gray-100"
-                        onClick={() => toggle()}>
-                        <i className="fa-solid fa-xmark" />
-                    </button>
-                </div>
-                <div className="mt-6 flex">
-                    <p className="mr-4 my-auto">Mã sinh viên:</p>
-                    <div className="inline-block w-fit">
-                        <input value={studentId}
-                            onChange={e => {
-                                doSearchStudent(e.target.value);
-                                setStudentId(e.target.value);
-                            }}
-                            onFocus={() => setIsShowingStudent(true)}
-                            onBlur={() => setIsShowingStudent(false)}
-                            className="text-gray-700 rounded w-full border outline-none border-gray-400 px-2.5 py-0.5 focus:border-red-normal" />
-                        {isShowingStudents && (
-                            <div className='mt-0.5 bg-white absolute shadow-2xl rounded w-[200px] border'>
-                                {studentRes.data.map((value, index) => (
-                                    <div key={value.id}>
-                                        <button className='text-start hover:bg-gray-200 w-[100%]'
-                                            onMouseDown={() => {
-                                                setStudentId(value.id);
-                                                setStudentRes({
-                                                    ...studentRes,
-                                                    data: studentRes.data.filter(v =>
-                                                        v.id === value.id
-                                                    )
-                                                })
-                                            }}>
-                                            <p className='py-1 px-2'>{value.id} - {value.name}</p>
-                                        </button>
-                                        {index !== studentRes.data.length - 1 && <hr />}
-                                    </div>
 
-                                ))}
-                            </div>
-                        )}
+    if (isShowing) {
+        return ReactDOM.createPortal(
+            <div className='block fixed top-0 left-0 w-[100%] h-[100%] bg-[rgba(0,0,0,0.2)] pt-[100px] text-gray-700'>
+                <div className={`bg-[#fefefe] w-[400px] mx-auto py-4 px-6 border rounded-xl shadow-2xl`}>
+                    <div className="my-4 mx-4">
+                        <div className="flex">
+                            <p className="font-semibold text-xl text-gray-600">Thêm sinh viên</p>
+                            <button className="ml-auto h-6 w-6 hover:text-red-dark rounded-[50%] bg-gray-100"
+                                onClick={() => {
+                                    toggle()
+                                }}>
+                                <i className="fa-solid fa-xmark" />
+                            </button>
+                        </div>
+                        <p className="mr-4 mt-3">Mã sinh viên:</p>
+                        <div className="w-full mt-1">
+                            <input value={studentId}
+                                onChange={e => {
+                                    doSearchStudent(e.target.value);
+                                    setStudentId(e.target.value);
+                                }}
+                                placeholder="B18DCCN261"
+                                onFocus={() => setIsShowingStudent(true)}
+                                onBlur={() => setIsShowingStudent(false)}
+                                className=" text-gray-700 rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1 focus:border-red-normal" />
+                            {isShowingStudents && (
+                                <div className='mt-0.5 bg-white absolute shadow-xl rounded-lg w-[318px] border'>
+                                    {studentRes.data.map((value, index) => (
+                                        <div key={value.id}>
+                                            <button className='text-start hover:bg-gray-200 w-[100%]'
+                                                onMouseDown={() => {
+                                                    setStudentId(value.id);
+                                                    setStudentRes({
+                                                        ...studentRes,
+                                                        data: studentRes.data.filter(v =>
+                                                            v.id === value.id
+                                                        )
+                                                    })
+                                                }}>
+                                                <p className='py-1 px-2'>{value.id} - {value.name}</p>
+                                            </button>
+                                            {index !== studentRes.data.length - 1 && <hr />}
+                                        </div>
+
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <p className="mt-2.5">Chú thích</p>
+                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-1 resize-none"
+                            placeholder="Chú thích thêm" value={''} onChange={e => console.log(e.target.value)} />
+                        {status.status === "FAILED" ? (
+                            <p className="text-sm text-red-500 font-semibold mt-1 ml-1">
+                                {status.message}
+                            </p>
+                        ) : (<p className="mt-1" />)}
+
+                        <div className="block text-end">
+                            <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
+                                onClick={toggle}>Hủy</button>
+                            <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
+                                onClick={handleAddExam}>Tiếp tục</button>
+                        </div>
                     </div>
-                    <button
-                        className="ml-auto my-auto text-white font-semibold bg-red-normal hover:bg-red-dark px-4 py-1 rounded-lg"
-                        onClick={handleAddExam}>Thêm</button>
                 </div>
-
-                {status.status === "SUCCESS" ? (
-                    <p className="text-green-600 font-semibold mt-5">Thêm bài thi thành công, Mã phách: {status.examCode}</p>
-                ) : status.status === "FAILED" ? (
-                    <p className="text-red-500 font-semibold mt-5">{status.message}</p>
-                ) : (<p className="mt-3" />)}
-            </div>
-        </Modal>
-    );
-    return (<>{modal}</>);
+            </div>, document.body
+        )
+    }
 }

@@ -28,7 +28,7 @@ async function createServer(): Promise<Application> {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded(
         { extended: true }
-    ));
+    )); app.use(cors());
 
     await createRoutes(app);
 
@@ -48,7 +48,6 @@ async function createServer(): Promise<Application> {
 
 
 async function createRoutes(app: Application): Promise<void> {
-    app.use(cors())
     app.use('/api/auth', authRouter);
     app.use('/api/account', checkToken, accountRouter);
     app.use('/api/class', checkToken, classRouter);

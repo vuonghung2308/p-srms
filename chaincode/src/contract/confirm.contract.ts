@@ -117,6 +117,7 @@ export class ConfirmContract extends BaseContract {
         ctx: Context, token: string, type: string,
         id: string, censorId: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verifyTeacher(token)
         );
@@ -137,7 +138,7 @@ export class ConfirmContract extends BaseContract {
             ]);
 
             if (currentConfirm && currentConfirm.status !== "CANCELED" &&
-                currentConfirm.status !== "REJECTED"
+                !currentConfirm.status.includes("REJECTED")
             ) {
                 return failed({
                     code: "EXISTED", param: 'id',
@@ -154,11 +155,10 @@ export class ConfirmContract extends BaseContract {
 
             const confirm: Confirm = {
                 id: `${confirms.length}.${id}`,
-                teacherId: this.currentPayload.id,
-                time: (new Date().getTime() / 1000),
                 type, note, status: "INITIALIZED",
                 docType: "CONFIRM", objectId: id,
-                censorId1: censorId, censorId2: null
+                censorId1: censorId, censorId2: null,
+                teacherId: this.currentPayload.id
             }
 
             if (currentConfirm) {
@@ -200,6 +200,7 @@ export class ConfirmContract extends BaseContract {
             delete confirm.docType;
             delete confirm.censorId1;
             confirm['censor1'] = censor1;
+            confirm['time'] = time;
             return success(confirm);
         } else {
             return failed({
@@ -214,6 +215,7 @@ export class ConfirmContract extends BaseContract {
         ctx: Context, token: string,
         id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verifyTeacher(token)
         );
@@ -239,7 +241,6 @@ export class ConfirmContract extends BaseContract {
         ]);
         if (cls !== null && cls.teacherId === this.currentPayload.id) {
             confirm.status = "CANCELED"; confirm.note = note;
-            confirm.time = new Date().getTime() / 1000;
             confirm.docType = "CONFIRM";
             await ledger.putState(
                 ctx, this, confirm.id,
@@ -248,6 +249,7 @@ export class ConfirmContract extends BaseContract {
             delete confirm.docType;
             delete confirm.censorId1;
             confirm['censor1'] = censor1;
+            confirm['time'] = time;
             return success(confirm);
         } else {
             return failed({
@@ -261,6 +263,7 @@ export class ConfirmContract extends BaseContract {
     public async Accept(
         ctx: Context, token: string, id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verify(token)
         );
@@ -292,8 +295,7 @@ export class ConfirmContract extends BaseContract {
                     });
                 }
                 confirm.status = "ACCEPTED"; confirm.note = note;
-                confirm.time = new Date().getTime() / 1000;
-                confirm.docType = "CONFIRM";
+                confirm.docType = "CONFIRM"; let censor2 = null;
                 if (this.currentPayload.type === "EMPLOYEE") {
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
@@ -302,11 +304,9 @@ export class ConfirmContract extends BaseContract {
                         });
                     }
                     confirm.censorId2 = this.currentPayload.id
-                    const censor2 = await ledger.getState(
-                        ctx, confirm.censorId2, "TEACHER"
+                    censor2 = await ledger.getState(
+                        ctx, confirm.censorId2, "EMPLOYEE"
                     );
-                    delete confirm.censorId2;
-                    confirm["censor2"] = censor2;
                 }
                 const censor1 = await ledger.getState(
                     ctx, confirm.censorId1, "TEACHER"
@@ -318,6 +318,11 @@ export class ConfirmContract extends BaseContract {
                 delete confirm.docType;
                 delete confirm.censorId1;
                 confirm["censor1"] = censor1;
+                confirm['time'] = time;
+                if (censor2) {
+                    delete confirm.censorId2;
+                    confirm["censor2"] = censor2;
+                }
                 return success(confirm);
             }
             case "STUDENT": case "ADMIN": default: {
@@ -334,6 +339,7 @@ export class ConfirmContract extends BaseContract {
         ctx: Context, token: string,
         id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verify(token)
         );
@@ -362,14 +368,30 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                confirm.status = "REJECTED"; confirm.note = note;
-                confirm.time = new Date().getTime() / 1000;
-                confirm.docType = "CONFIRM";
+                let censor2 = null; confirm.docType = "CONFIRM";
+                confirm.status = "T_REJECTED"; confirm.note = note;
+                if (this.currentPayload.type === "EMPLOYEE") {
+                    confirm.censorId2 = this.currentPayload.id;
+                    confirm.status = "E_REJECTED"
+                    censor2 = await ledger.getState(
+                        ctx, confirm.censorId2, "EMPLOYEE"
+                    );
+                }
+                const censor1 = await ledger.getState(
+                    ctx, confirm.censorId1, "TEACHER"
+                );
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
                 delete confirm.docType;
+                delete confirm.censorId1;
+                confirm["censor1"] = censor1;
+                confirm['time'] = time;
+                if (censor2) {
+                    delete confirm.censorId2;
+                    confirm["censor2"] = censor2;
+                }
                 return success(confirm);
             }
             case "STUDENT": case "ADMIN": default: {
@@ -386,6 +408,7 @@ export class ConfirmContract extends BaseContract {
         ctx: Context, token: string,
         id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verify(token)
         );
@@ -414,14 +437,19 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
+                const censor2 = await ledger.getState(
+                    ctx, confirm.censorId2, "EMPLOYEE"
+                );
                 confirm.status = "DONE"; confirm.note = note;
-                confirm.time = new Date().getTime() / 1000;
                 confirm.docType = "CONFIRM";
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
                 delete confirm.docType;
+                confirm['time'] = time;
+                delete confirm.censorId2;
+                confirm["censor2"] = censor2;
                 return success(confirm);
             }
             case "STUDENT": case "ADMIN": default: {

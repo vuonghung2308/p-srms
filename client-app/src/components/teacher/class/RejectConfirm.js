@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import ReactDOM from 'react-dom';
-import { doneConfirm } from "../../../api/confirm";
+import { rejectConfirm } from "../../../api/confirm";
 
-export default function AcceptConfirm({
+export default function RejectConfirm({
     isShowing, toggle, onSuccess, confirmId
 }) {
     const [status, setStatus] = useState({ status: "NONE" });
@@ -25,9 +25,9 @@ export default function AcceptConfirm({
         return false;
     }
 
-    const handleConfirmDone = async () => {
+    const handleConfirmRejection = async () => {
         if (isNoteEmpty()) return;
-        doneConfirm(confirmId.id, note).then(res => {
+        rejectConfirm(confirmId, note).then(res => {
             if (res.status === "SUCCESS") {
                 onSuccess(res.data);
             } else {
@@ -53,6 +53,7 @@ export default function AcceptConfirm({
 
                         <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
                             placeholder="Chú thích thêm" value={note} onChange={e => setNote(e.target.value)} />
+
                         {status.status === "FAILED" ? (
                             <p className="text-sm text-red-500 font-semibold mt-1 ml-1">
                                 {status.message}
@@ -63,9 +64,8 @@ export default function AcceptConfirm({
                             <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
                                 onClick={toggle}>Hủy</button>
                             <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
-                                onClick={handleConfirmDone}>Duyệt</button>
+                                onClick={handleConfirmRejection}>Từ chối</button>
                         </div>
-
                     </div>
                 </div>
             </div>, document.body

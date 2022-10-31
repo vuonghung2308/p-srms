@@ -52,7 +52,7 @@ export class ClassContract extends BaseContract {
                         const values = await Promise.all([
                             ledger.getState(ctx, record.subjectId, "SUBJECT"),
                             ledger.getState(ctx, record.teacherId, "TEACHER")
-                        ])
+                        ]);
                         delete record.subjectId; record["subject"] = values[0];
                         delete record.teacherId; record["teacher"] = values[1];
                         return true;
@@ -115,26 +115,14 @@ export class ClassContract extends BaseContract {
             )
         ]);
         if (cls) {
-            const getListCensor = async () => {
-                if (confirm) {
-                    return [
-                        await ledger.getState(ctx, confirm.censorId1, "TEACHER"),
-                        await ledger.getState(ctx, confirm.censorId2, "EMPLOYEE")
-                    ]
-                }
-                return null
-            }
-            const [subject, teacher, censors] = await Promise.all([
+            let confirmId = null;
+            if (confirm) confirmId = confirm.id;
+            const [subject, teacher, confirms] = await Promise.all([
                 ledger.getState(ctx, cls.subjectId, "SUBJECT"),
                 ledger.getState(ctx, cls.teacherId, "TEACHER"),
-                getListCensor(),
-            ])
-            if (confirm) {
-                delete confirm.censorId1; delete confirm.censorId2;
-                if (censors[0]) confirm["censor1"] = censors[0];
-                if (censors[1]) confirm["censor2"] = censors[0];
-                cls['confirm'] = confirm;
-            }
+                getConfirmsForClass(ctx, confirmId)
+            ]);
+            if (confirms.length !== 0) cls['confirms'] = confirms;
             delete cls.subjectId; cls["subject"] = subject;
             delete cls.teacherId; cls["teacher"] = teacher;
             switch (this.currentPayload.type) {
@@ -155,7 +143,7 @@ export class ClassContract extends BaseContract {
                 case "EMPLOYEE": { return success(cls); }
                 case "TEACHER": {
                     if (cls["teacher"].id === this.currentPayload.id ||
-                        confirm["censor1"].id === this.currentPayload.id
+                        confirm.censorId1 === this.currentPayload.id
                     ) { return success(cls); } else {
                         return failed({
                             code: "INCORRECT", param: 'classId',
@@ -370,4 +358,42 @@ export class ClassContract extends BaseContract {
         delete point.docType;
         return success({ ...point, student });
     }
+}
+
+const getConfirmsForClass = async (
+    ctx: Context, confirmId: string
+): Promise<Confirm[]> => {
+    const confirms = [];
+    const censors = {};
+    if (!confirmId) return confirms;
+    const history: [] = await ledger.getHistory(
+        ctx, `CONFIRM.${confirmId}`
+    );
+    for (const item of history) {
+        const value: Confirm = item['value'];
+        if (!censors[value.censorId1]) {
+            const censor = await ledger.getState(
+                ctx, value.censorId1, "TEACHER"
+            );
+            censors[value.censorId1] = censor;
+        }
+        if (!censors[value.censorId2]) {
+            const censor = await ledger.getState(
+                ctx, value.censorId2, "EMPLOYEE"
+            );
+            censors[value.censorId2] = censor;
+        }
+        const censor1 = censors[value.censorId1];
+        const censor2 = censors[value.censorId2];
+        delete value.censorId1; delete value.censorId2;
+        delete value.docType;
+        const time = item['timestamp']['seconds'] / 1
+            + item['timestamp']['nanos'] / 1000000000;
+        confirms.push({
+            ...value, censor1, censor2,
+            time: Number(time)
+        });
+    }
+    confirms.sort((a, b) => b.time - a.time)
+    return confirms;
 }

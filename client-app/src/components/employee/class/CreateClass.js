@@ -65,7 +65,7 @@ const CreateClass = ({ isShowing, toggle, onSuccess }) => {
                 <p className="font-semibold text-xl text-gray-600">Thêm lớp học</p>
                 <button className="ml-auto h-6 w-6 hover:text-red-dark rounded-[50%] bg-gray-100"
                     onClick={() => toggle()}>
-                    <i class="fa-solid fa-xmark" />
+                    <i className="fa-solid fa-xmark" />
                 </button>
             </div>
 

@@ -72,29 +72,6 @@ export const getStates = async (
 }
 
 export const getHistory = async (
-    ctx: Context, id: string, docType: string
-): Promise<any> => {
-    const histories = [];
-    const iterator = await ctx.stub.getHistoryForKey(`${docType}.${id}`);
-    let result = await iterator.next();
-    while (!result.done) {
-        const buffer = result.value.value;
-        const tx = await getState(ctx, result.value.txId, "TRANSACTION");
-
-        const history = {
-            txId: result.value.txId,
-            creator: tx.creator,
-            isDelete: result.value.isDelete,
-            timestamp: result.value.timestamp,
-            value: utils.fromBuffer(buffer)
-        };
-        histories.push(history);
-        result = await iterator.next();
-    }
-    return histories;
-};
-
-export const getHistoryByKey = async (
     ctx: Context, key: string
 ): Promise<any> => {
     const histories = [];

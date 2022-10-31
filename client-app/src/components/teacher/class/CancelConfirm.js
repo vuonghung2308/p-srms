@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import ReactDOM from 'react-dom';
 import { cancelConfirm } from "../../../api/confirm";
-import { strTime } from "../../../ultils/time"
 
 export default function CancelConfirm({
-    isShowing, toggle, onSuccess, confirm
+    isShowing, toggle, onSuccess, confirmId
 }) {
     const [status, setStatus] = useState({ status: "NONE" });
     const [note, setNote] = useState("");
@@ -23,7 +22,7 @@ export default function CancelConfirm({
             })
             return;
         }
-        cancelConfirm(confirm.id, note).then(res => {
+        cancelConfirm(confirmId, note).then(res => {
             if (res.status === "SUCCESS") {
                 onSuccess(res.data);
             } else {
@@ -46,23 +45,22 @@ export default function CancelConfirm({
                                 <i className="fa-solid fa-xmark" />
                             </button>
                         </div>
-                        <div className="mt-4 mx-1">
-                            <p className="mt-1">GV xác nhận: {confirm.censor1.id} - {confirm.censor1.name}</p>
-                            <p className="mt-1">Ngày yêu cầu: {strTime(confirm.time)}</p>
-                            <p className="mt-1">Ghi chú: {confirm.note}</p>
-                        </div>
 
                         <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
-                            placeholder="Ghi chú (lý do hủy)" value={note} onChange={e => setNote(e.target.value)} />
-
-                        <button className="w-full text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-6 rounded-lg mt-5"
-                            onClick={handleConfirmCancelation}>Xác nhận</button>
+                            placeholder="Chú thích (lý do hủy)" value={note} onChange={e => setNote(e.target.value)} />
 
                         {status.status === "FAILED" ? (
-                            <p className="text-red-500 font-semibold mt-3">
+                            <p className="text-sm text-red-500 font-semibold mt-1 ml-1">
                                 {status.message}
                             </p>
-                        ) : (<p className="mt-3" />)}
+                        ) : (<p className="mt-1" />)}
+
+                        <div className="block text-end">
+                            <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
+                                onClick={toggle}>Hủy</button>
+                            <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
+                                onClick={handleConfirmCancelation}>Tiếp tục</button>
+                        </div>
                     </div>
                 </div>
             </div>, document.body

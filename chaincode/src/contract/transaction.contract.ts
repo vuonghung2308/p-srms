@@ -39,15 +39,15 @@ export class TransactionContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const histories = await ledger.getHistoryByKey(ctx, key);
-        if (histories.length === 0) {
+        const history = await ledger.getHistory(ctx, key);
+        if (history.length === 0) {
             return failed({
                 code: "NOT_EXISTED",
                 param: 'key',
                 msg: `The key ${key} does not exist`
             });
         }
-        return success(histories);
+        return success(history);
     }
 
     @Transaction(false)
@@ -76,7 +76,7 @@ export class TransactionContract extends BaseContract {
         }
         const values = [];
         for (const key of transaction.keys) {
-            const histories = await ledger.getHistoryByKey(ctx, key);
+            const histories = await ledger.getHistory(ctx, key);
             const history = histories.find((value: any) =>
                 value.txId === transaction.txId
             );
