@@ -37,27 +37,33 @@ const Backup = () => {
             <div className="mt-4">
                 <div className="relative">
                     <div className="inline-block float-left w-[50%] pr-6">
-                        <p className="font-semibold text-gray-700 text-xl">Khôi phục dữ liệu</p>
+                        <p className="font-semibold text-gray-500 text-xl">Khôi phục dữ liệu</p>
                         <div className="flex my-2">
-                            <p className="text-gray-700 overflow-hidden">Tải lên tệp sao lưu: {dataFile && dataFile.name && dataFile.name}</p>
-                            <button className="ml-auto px-3 font-semibold text-gray-700 hover:text-red-dark"
-                                onClick={() => { inputFile.current.click() }}>Chọn tệp</button>
+                            <p className="overflow-hidden">Tải lên tệp sao lưu: {dataFile && dataFile.name && dataFile.name}</p>
+                            <button className="ml-auto flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                onClick={() => { inputFile.current.click() }} >
+                                <p className="my-auto">Chọn tệp</p>
+                            </button>
+                            <button className="ml-2 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                onClick={handleRestore} >
+                                <p className="my-auto">Bắt đầu</p>
+                            </button>
                         </div>
-                        <button className="ml-auto px-4 py-0.5 bg-red-normal hover:bg-red-dark text-white rounded font-semibold float-right"
-                            onClick={handleRestore}>Bắt đầu</button>
                     </div>
 
 
                     <div className="inline-block float right w-[50%] pl-6">
-                        <p className="font-semibold text-gray-700 text-xl">Sao lưu dữ liệu</p>
+                        <p className="font-semibold text-gray-500 text-xl">Sao lưu dữ liệu</p>
                         <div className="flex my-2">
-                            <p className="my-auto text-gray-700">Tạo bản sao lưu</p>
-                            <button className="ml-auto px-4 py-0.5 bg-red-normal hover:bg-red-dark text-white rounded font-semibold"
-                                onClick={handleBackup}>Bắt đầu</button>
+                            <p className="my-auto">Tạo bản sao lưu</p>
+                            <button className="ml-auto flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                onClick={handleBackup} >
+                                <p className="my-auto">Bắt đầu</p>
+                            </button>
                         </div>
                     </div>
 
-                    <div className="absolute left-[50%] top-0 clear-both w-[1px] h-[100%] bg-gray-300 my-4" />
+                    <div className="absolute left-[50%] top-0 clear-both w-[2px] h-full bg-gray-200" />
                 </div>
 
             </div>

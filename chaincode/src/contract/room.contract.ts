@@ -101,7 +101,7 @@ export class RoomContract extends BaseContract {
             if (confirms.length !== 0) room['confirms'] = confirms;
             switch (this.currentPayload.type) {
                 case "TEACHER": {
-                    if (room.teacherId === this.currentPayload.id) {
+                    if (teacher.id === this.currentPayload.id) {
                         return success(room);
                     } else {
                         return failed({

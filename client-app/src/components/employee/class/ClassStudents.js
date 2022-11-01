@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getClass, getStudents } from "../../../api/class";
 import { strTime } from "../../../ultils/time";
 import useModal from "../../common/Modal/use";
-import AcceptConfirm from "./AcceptConfirm";
+import DoneConfirm from "./DoneConfirm";
 import AddStudent from "./AddStudent";
 import RejectConfirm from "./RejectConfirm";
 
@@ -30,9 +30,12 @@ export function ClassStudents() {
         const confirms = classRes.data.confirms;
         setClassRes({
             ...classRes,
-            confirms: [
-                ...confirms, data
-            ]
+            data: {
+                ...classRes.data,
+                confirms: [
+                    data, ...confirms
+                ]
+            }
         });
         setTimeout(() => {
             alert("Xử lý yêu cầu thành công!")
@@ -158,7 +161,7 @@ export function ClassStudents() {
                         isShowing={isRejectionShowing}
                         confirmId={confirmId.current}
                         onSuccess={handleRejectionConfirm} />
-                    <AcceptConfirm
+                    <DoneConfirm
                         toggle={acceptanceToggle}
                         isShowing={isAcceptionShowing}
                         confirmId={confirmId.current}
@@ -190,7 +193,7 @@ const Confirm = ({ teacher, confirm }) => {
                 {confirm.status === "CANCELED" && (
                     <p className="text font-semibold text-gray-500">Hủy yêu cầu duyệt bảng điểm</p>
                 )}
-                {confirm.status === "ACCEPTED" && (
+                {(confirm.status === "ACCEPTED" || confirm.status === "DONE") && (
                     <p className="text font-semibold text-gray-500">Đã duyệt bảng điểm</p>
                 )}
                 {confirm.status.includes("REJECTED") && (
@@ -210,6 +213,9 @@ const Confirm = ({ teacher, confirm }) => {
                     )}
                     {confirm.status === "ACCEPTED" && (
                         <p>{confirm.censor1.name} ({confirm.censor1.id})</p>
+                    )}
+                    {confirm.status === "DONE" && (
+                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
                     )}
                     {confirm.status === "E_REJECTED" && (
                         <p>{confirm.censor2.name} ({confirm.censor2.id})</p>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import ReactDOM from 'react-dom';
-import { doneConfirm } from "../../../api/confirm";
+import { cancelConfirm } from "../../../api/confirm";
 
-export default function AcceptConfirm({
+export default function CancelConfirm({
     isShowing, toggle, onSuccess, confirmId
 }) {
     const [status, setStatus] = useState({ status: "NONE" });
@@ -14,20 +14,15 @@ export default function AcceptConfirm({
         }
     }, [note, isShowing])
 
-    const isNoteEmpty = () => {
+    const handleConfirmCancelation = async () => {
         if (note.length === 0) {
             setStatus({
                 status: "FAILED",
                 message: "Ghi chú không được bỏ trống."
             })
-            return true;
+            return;
         }
-        return false;
-    }
-
-    const handleConfirmDone = async () => {
-        if (isNoteEmpty()) return;
-        doneConfirm(confirmId.id, note).then(res => {
+        cancelConfirm(confirmId, note).then(res => {
             if (res.status === "SUCCESS") {
                 onSuccess(res.data);
             } else {
@@ -42,7 +37,7 @@ export default function AcceptConfirm({
                 <div className={`bg-[#fefefe] w-[400px] mx-auto py-4 px-6 border rounded-xl shadow-2xl`}>
                     <div className="my-4 mx-4">
                         <div className="flex">
-                            <p className="mx-1 font-semibold text-xl text-gray-600">Duyệt bảng điểm</p>
+                            <p className="mx-1 font-semibold text-xl text-gray-600">Hủy nộp điểm thi</p>
                             <button className="ml-auto h-6 w-6 hover:text-red-dark rounded-[50%] bg-gray-100"
                                 onClick={() => {
                                     toggle()
@@ -52,7 +47,8 @@ export default function AcceptConfirm({
                         </div>
 
                         <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
-                            placeholder="Chú thích thêm" value={note} onChange={e => setNote(e.target.value)} />
+                            placeholder="Chú thích (lý do hủy)" value={note} onChange={e => setNote(e.target.value)} />
+
                         {status.status === "FAILED" ? (
                             <p className="text-sm text-red-500 font-semibold mt-1 ml-1">
                                 {status.message}
@@ -63,9 +59,8 @@ export default function AcceptConfirm({
                             <button className="mr-4 text-gray-600 border border-gray-300 hover:border-red-dark hover:text-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
                                 onClick={toggle}>Hủy</button>
                             <button className="text-white bg-red-normal hover:bg-red-dark font-semibold py-2 px-4 rounded-lg mt-5"
-                                onClick={handleConfirmDone}>Duyệt</button>
+                                onClick={handleConfirmCancelation}>Tiếp tục</button>
                         </div>
-
                     </div>
                 </div>
             </div>, document.body

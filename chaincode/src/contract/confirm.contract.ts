@@ -6,6 +6,8 @@ import { failed, success } from "../ledger/response";
 import { Class } from "../vo/class";
 import { Confirm } from "../vo/confirm";
 import { Room } from "../vo/room";
+import { Teacher } from "../vo/teacher";
+import { Employee } from "../vo/employee";
 
 @Info({ title: 'ConfirmContract', description: 'Smart contract for Confirm' })
 export class ConfirmContract extends BaseContract {
@@ -146,13 +148,6 @@ export class ConfirmContract extends BaseContract {
                 });
             }
 
-            if (censor1 === null) {
-                return failed({
-                    code: "NOT_EXIST", param: 'censorId',
-                    msg: `The teacher ${censorId} does not exist`
-                });
-            }
-
             const confirm: Confirm = {
                 id: `${confirms.length}.${id}`,
                 type, note, status: "INITIALIZED",
@@ -166,6 +161,12 @@ export class ConfirmContract extends BaseContract {
             }
 
             if (type === "COMPONENTS_POINT") {
+                if (censor1 === null) {
+                    return failed({
+                        code: "NOT_EXIST", param: 'censorId',
+                        msg: `The teacher ${censorId} does not exist`
+                    });
+                }
                 const cls: Class = await ledger.getState(
                     ctx, id, "CLASS"
                 );
@@ -180,6 +181,8 @@ export class ConfirmContract extends BaseContract {
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
+                delete confirm.censorId1;
+                confirm['censor1'] = censor1;
             } else {
                 const room: Room = await ledger.getState(
                     ctx, id, "ROOM"
@@ -191,6 +194,7 @@ export class ConfirmContract extends BaseContract {
                     });
                 }
                 // check point is confirmed here
+                confirm.censorId1 = null;
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
@@ -198,8 +202,6 @@ export class ConfirmContract extends BaseContract {
             }
 
             delete confirm.docType;
-            delete confirm.censorId1;
-            confirm['censor1'] = censor1;
             confirm['time'] = time;
             return success(confirm);
         } else {
@@ -235,27 +237,48 @@ export class ConfirmContract extends BaseContract {
                 msg: `The confirm ${id} does not exist.`
             });
         }
-        const [cls, censor1] = await Promise.all([
-            ledger.getState(ctx, confirm.objectId, "CLASS"),
-            ledger.getState(ctx, confirm.censorId1, "TEACHER"),
-        ]);
-        if (cls !== null && cls.teacherId === this.currentPayload.id) {
-            confirm.status = "CANCELED"; confirm.note = note;
-            confirm.docType = "CONFIRM";
-            await ledger.putState(
-                ctx, this, confirm.id,
-                confirm, confirm.docType
-            )
-            delete confirm.docType;
-            delete confirm.censorId1;
-            confirm['censor1'] = censor1;
-            confirm['time'] = time;
-            return success(confirm);
+        const [cls, room, censor1]: [Class, Room, Teacher]
+            = await Promise.all([
+                ledger.getState(ctx, confirm.objectId, "CLASS"),
+                ledger.getState(ctx, confirm.objectId, "ROOM"),
+                ledger.getState(ctx, confirm.censorId1, "TEACHER"),
+            ]);
+        if (confirm.type === "COMPONENTS_POINT") {
+            if (cls !== null && cls.teacherId === this.currentPayload.id) {
+                confirm.status = "CANCELED"; confirm.note = note;
+                confirm.docType = "CONFIRM";
+                await ledger.putState(
+                    ctx, this, confirm.id,
+                    confirm, confirm.docType
+                )
+                delete confirm.docType;
+                delete confirm.censorId1;
+                confirm['censor1'] = censor1;
+                confirm['time'] = time;
+                return success(confirm);
+            } else {
+                return failed({
+                    code: 'NOT_ALLOWED', param: 'token',
+                    msg: `The token is not valid.`
+                });
+            }
         } else {
-            return failed({
-                code: 'NOT_ALLOWED', param: 'token',
-                msg: `The token is not valid.`
-            });
+            if (room !== null && room.teacherId === this.currentPayload.id) {
+                confirm.status = "CANCELED"; confirm.note = note;
+                confirm.docType = "CONFIRM";
+                await ledger.putState(
+                    ctx, this, confirm.id,
+                    confirm, confirm.docType
+                )
+                delete confirm.docType;
+                confirm['time'] = time;
+                return success(confirm);
+            } else {
+                return failed({
+                    code: 'NOT_ALLOWED', param: 'token',
+                    msg: `The token is not valid.`
+                });
+            }
         }
     }
 
@@ -421,7 +444,7 @@ export class ConfirmContract extends BaseContract {
         }
 
         switch (this.currentPayload.type) {
-            case "TEACHER": case "EMPLOYEE": {
+            case "EMPLOYEE": {
                 const confirm: Confirm = await ledger.getState(
                     ctx, id, "CONFIRM"
                 );
@@ -437,22 +460,23 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                const censor2 = await ledger.getState(
-                    ctx, confirm.censorId2, "EMPLOYEE"
-                );
                 confirm.status = "DONE"; confirm.note = note;
+                confirm.censorId2 = this.currentPayload.id;
                 confirm.docType = "CONFIRM";
+                const [censor1, censor2]: [Teacher, Employee] = await Promise.all([
+                    ledger.getState(ctx, confirm.censorId1, "TEACHER"),
+                    ledger.getState(ctx, confirm.censorId2, "EMPLOYEE")
+                ]);
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
-                delete confirm.docType;
-                confirm['time'] = time;
-                delete confirm.censorId2;
-                confirm["censor2"] = censor2;
+                delete confirm.docType; confirm['time'] = time;
+                delete confirm.censorId2; confirm["censor2"] = censor2;
+                delete confirm.censorId1; confirm["censor1"] = censor1;
                 return success(confirm);
             }
-            case "STUDENT": case "ADMIN": default: {
+            case "TEACHER": case "STUDENT": case "ADMIN": default: {
                 return failed({
                     code: "NOT_ALLOWED", param: 'token',
                     msg: "You do not have permission"

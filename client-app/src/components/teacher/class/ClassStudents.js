@@ -368,16 +368,15 @@ const Confirm = ({ teacher, confirm }) => {
                         <p className="ml-2 text-sm my-auto">tới: {confirm.censor1.name} ({confirm.censor1.id})</p>
                     </div>
                 )}
+                {(confirm.status === "ACCEPTED" || confirm.status === "DONE") && (
+                    <p className="text font-semibold text-gray-500">Đã duyệt bảng điểm</p>
+                )}
                 {confirm.status === "CANCELED" && (
                     <p className="text font-semibold text-gray-500">Hủy yêu cầu duyệt bảng điểm</p>
-                )}
-                {confirm.status === "ACCEPTED" && (
-                    <p className="text font-semibold text-gray-500">Đã duyệt bảng điểm</p>
                 )}
                 {confirm.status.includes("REJECTED") && (
                     <p className="text font-semibold text-gray-500">Đã từ chối bảng điểm</p>
                 )}
-
                 <div className="ml-auto my-auto flex text-sm rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
                     <i className="text-xs my-auto mr-2 fa-regular fa-clock" />
                     <p>{strTime(confirm.time)}</p>
@@ -397,6 +396,10 @@ const Confirm = ({ teacher, confirm }) => {
                     )}
                     {confirm.status === "T_REJECTED" && (
                         <p>{confirm.censor1.name} ({confirm.censor1.id})</p>
+                    )}
+
+                    {confirm.status === "DONE" && (
+                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
                     )}
                 </div>
                 <div className="ml-4 flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
