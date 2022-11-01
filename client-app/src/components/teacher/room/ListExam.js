@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getExams, updatePoint } from "../../../api/exam";
 import { getRoom } from "../../../api/room";
@@ -6,9 +6,11 @@ import useModal from "../../common/Modal/use";
 import CancelConfirm from "./CancelConfirm";
 import { strTime } from "../../../ultils/time";
 import CreateConfirm from "./CreateConfirm";
+import { PayloadContext } from "../../../common/token";
 
 export function ListExam() {
     const { roomId } = useParams();
+    const payload = useContext(PayloadContext);
     const [selectedExam, setSelectedExam] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [examsRes, setExamsRes] = useState({ status: "NONE" });
@@ -140,7 +142,12 @@ export function ListExam() {
                                 <th className="border-4 border-white w-[120px]">Mã phách</th>
                                 <th className="border-4 border-white">Ghi chú</th>
                                 <th className="border-4 border-white w-[100px]">Điểm</th>
-                                <th className="border-4 border-white w-[100px]"></th>
+                                {roomRes.data && (roomRes.data.teacher.id === payload.id &&
+                                    (!roomRes.data.confirms ||
+                                        (roomRes.data.confirms && roomRes.data.confirms[0].status === "CANCELED") ||
+                                        (roomRes.data.confirms && roomRes.data.confirms[0].status.includes("REJECTED"))
+                                    )
+                                ) && (<th className="border-4 border-white w-[100px]"></th>)}
                             </tr>
                         </thead>
                         <tbody>
@@ -161,19 +168,27 @@ export function ListExam() {
                                                 }} />
                                         ) : (value.point)}
                                     </td>
-                                    <td >
-                                        <Link className="text-center mx-auto w-[60px] flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
-                                            onClick={() => handleSelectedExam(value)}>
-                                            {isEditing && value.code === selectedExam.code ? (
-                                                <i className="text-xs fa-solid fa-floppy-disk my-auto"></i>
-                                            ) : (
-                                                <i className="text-xs fa-solid fa-pen-to-square my-auto"></i>
-                                            )}
-                                            <p className="ml-1.5 h-fit">
-                                                {isEditing && value.code === selectedExam.code ? "Lưu" : "Sửa"}
-                                            </p>
-                                        </Link>
-                                    </td>
+                                    {roomRes.data && (roomRes.data.teacher.id === payload.id &&
+                                        (!roomRes.data.confirms ||
+                                            (roomRes.data.confirms && roomRes.data.confirms[0].status === "CANCELED") ||
+                                            (roomRes.data.confirms && roomRes.data.confirms[0].status.includes("REJECTED"))
+                                        )
+                                    ) && (
+                                            <td >
+                                                <Link className="text-center mx-auto w-[60px] flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
+                                                    onClick={() => handleSelectedExam(value)}>
+                                                    {isEditing && value.code === selectedExam.code ? (
+                                                        <i className="text-xs fa-solid fa-floppy-disk my-auto"></i>
+                                                    ) : (
+                                                        <i className="text-xs fa-solid fa-pen-to-square my-auto"></i>
+                                                    )}
+                                                    <p className="ml-1.5 h-fit">
+                                                        {isEditing && value.code === selectedExam.code ? "Lưu" : "Sửa"}
+                                                    </p>
+                                                </Link>
+                                            </td>
+                                        )
+                                    }
                                 </tr>
                             ))}
                         </tbody>

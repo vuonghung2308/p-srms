@@ -319,7 +319,6 @@ export function ClassStudents() {
                                                 </td>
                                             )
                                         }
-
                                     </tr>
                                 );
                             })}

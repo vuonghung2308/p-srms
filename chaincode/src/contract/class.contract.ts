@@ -6,6 +6,9 @@ import * as ledger from "../ledger/common";
 import { Point } from "../vo/point";
 import { failed, success } from "../ledger/response";
 import { Confirm } from "../vo/confirm";
+import { Exam } from "../vo/exam";
+import { Student } from "../vo/student";
+import logger from "../utils/logger";
 
 
 @Info({ title: 'ClassContract', description: 'Smart contract for Class' })
@@ -229,18 +232,23 @@ export class ClassContract extends BaseContract {
                 result = await ledger.getStates(
                     ctx, 'POINT', async (record) => {
                         if (record.classId === classId) {
-                            const exam = await ledger.getState(
+                            const exam: Exam = await ledger.getState(
                                 ctx, record.examId, "EXAM"
                             );
-                            const student = await ledger.getState(
-                                ctx, record.studentId, "STUDENT"
-                            );
-                            if (exam) {
+                            const [student, eConfirm]: [Student, Confirm]
+                                = await Promise.all([
+                                    ledger.getState(ctx, record.studentId, "STUDENT"),
+                                    ledger.getFirstState(
+                                        ctx, "CONFIRM", async (record: Confirm) => {
+                                            return record.objectId === exam.roomId
+                                        }
+                                    )
+                                ])
+                            if (exam && eConfirm && eConfirm.status === "DONE") {
                                 delete record.examId;
                                 record.examPoint = exam.point;
                             }
-                            delete record.studentId;
-                            record.student = student;
+                            delete record.studentId; record.student = student;
                             return true;
                         } return false;
                     }

@@ -9,6 +9,7 @@ import { Class } from "../vo/class";
 import { failed, success } from "../ledger/response";
 import { calculateAveragePoint, getNumberAveragePoint } from "../utils/point";
 import { Confirm } from "../vo/confirm";
+import logger from "../utils/logger";
 
 
 @Info({ title: 'PointContract', description: 'Smart contract for Point' })
@@ -155,17 +156,14 @@ export class PointContract extends BaseContract {
                     ledger.getState(ctx, cls.subjectId, "SUBJECT"),
                     ledger.getFirstState(
                         ctx, "CONFIRM", async (record: Confirm) => {
-                            return record.objectId === exam.id
+                            return record.objectId === exam.roomId
                         }
                     )
                 ]);
-                classes.push(cls);
-                delete record.examId;
-                delete record.classId;
-                delete cls.subjectId;
-                cls['subject'] = subject;
-                record['cls'] = cls;
-                if (exam && confirm.status === "DONE") {
+                classes.push(cls); delete record.examId;
+                delete record.classId; delete cls.subjectId;
+                cls['subject'] = subject; record['cls'] = cls;
+                if (exam && confirm && confirm.status === "DONE") {
                     record['examPoint'] = exam.point;
                 }
                 if (record['examPoint'] != null && record.attendancePoint != null &&
