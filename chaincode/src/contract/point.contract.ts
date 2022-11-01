@@ -9,8 +9,9 @@ import { Class } from "../vo/class";
 import { failed, success } from "../ledger/response";
 import { calculateAveragePoint, getNumberAveragePoint } from "../utils/point";
 import { Confirm } from "../vo/confirm";
-import logger from "../utils/logger";
-
+import { Room } from "../vo/room";
+import { Teacher } from "../vo/teacher";
+import { Employee } from "../vo/employee";
 
 @Info({ title: 'PointContract', description: 'Smart contract for Point' })
 export class PointContract extends BaseContract {
@@ -103,7 +104,7 @@ export class PointContract extends BaseContract {
     // }
 
     @Transaction(false)
-    public async GetPoint(
+    public async GetPoints(
         ctx: Context, token: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
@@ -116,8 +117,113 @@ export class PointContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const result = await this.getStudentPoint(ctx);
+        const result = await this.getStudentPoints(ctx);
         return success(result);
+    }
+
+    @Transaction(false)
+    public async GetPoint(
+        ctx: Context, token: string, pointId: string
+    ): Promise<string> {
+        const status = this.setCurrentPayload(
+            jwt.verifyStudent(token)
+        );
+        if (status.code !== "OKE") {
+            return failed({
+                code: status.code,
+                param: 'token',
+                msg: status.msg
+            });
+        }
+        const point: Point = await ledger.getState(
+            ctx, pointId, "POINT"
+        );
+        if (!point) {
+            return failed({
+                code: "NOT_EXISTED",
+                param: 'pointId',
+                msg: `The point ${pointId} does not exist`
+            });
+        }
+        if (point.studentId !== this.currentPayload.id) {
+            return failed({
+                code: "INVALID",
+                param: 'pointId',
+                msg: `The pointId ${pointId} is not valid`
+            });
+        }
+        const [cls, exam]: [Class, Exam] = await Promise.all([
+            ledger.getState(ctx, point.classId, "CLASS"),
+            ledger.getState(ctx, point.examId, "EXAM")
+        ])
+        const [subject, teacher, pConfirm]:
+            [Subject, Teacher, Confirm] = await Promise.all([
+                ledger.getState(ctx, cls.subjectId, "SUBJECT"),
+                ledger.getState(ctx, cls.teacherId, "TEACHER"),
+                ledger.getFirstState(ctx, "CONFIRM", async (record: Confirm) => {
+                    return record.objectId === cls.id;
+                })
+            ])
+        if (point.examId) {
+            const room: Room = await ledger.getState(ctx, exam.roomId, "ROOM");
+            const teacher: Teacher = await ledger.getState(ctx, room.teacherId, "TEACHER");
+            delete exam.roomId; exam['room'] = room;
+            delete room.teacherId; room['teacher'] = teacher;
+            delete room.subjectId; delete exam['studentId'];
+            const confirm: Confirm = await ledger.getFirstState(
+                ctx, "CONFIRM", async (record: Confirm) => {
+                    return record.objectId === room.id;
+                }
+            );
+            if (confirm) {
+                delete confirm.teacherId;
+                delete confirm.censorId1;
+                delete confirm.objectId;
+                if (confirm.censorId2) {
+                    const censor2 = await ledger.getState(
+                        ctx, confirm.censorId2, "EMPLOYEE"
+                    );
+                    delete confirm.censorId2;
+                    confirm['censor2'] = censor2;
+                }
+                exam['confirm'] = confirm;
+            }
+        }
+        if (pConfirm) {
+            if (pConfirm.censorId1) {
+                const censor1 = await ledger.getState(
+                    ctx, pConfirm.censorId1, "TEACHER");
+                delete pConfirm.censorId1;
+                pConfirm['censor1'] = censor1;
+            }
+            if (pConfirm.censorId2) {
+                const censor2 = await ledger.getState(
+                    ctx, pConfirm.censorId2, "EMPLOYEE");
+                delete pConfirm.censorId2;
+                pConfirm['censor2'] = censor2;
+            }
+            delete pConfirm.objectId;
+            delete pConfirm.teacherId;
+            point['confirm'] = pConfirm;
+        }
+        delete point.classId; delete point.studentId;
+        delete cls.teacherId; cls['teacher'] = teacher;
+        delete cls.subjectId; cls['subject'] = subject;
+        delete point.examId;
+        if (exam && exam['confirm'] &&
+            exam['confirm'].status === "DONE"
+        ) {
+            return success({
+                class: cls,
+                points: point,
+                exam: exam
+            });
+        } else {
+            return success({
+                class: cls,
+                points: point
+            });
+        }
     }
 
     @Transaction(false)
@@ -137,14 +243,14 @@ export class PointContract extends BaseContract {
         const student = await ledger.getState(
             ctx, this.currentPayload.id, "STUDENT"
         );
-        const result = await this.getStudentPoint(ctx);
+        const result = await this.getStudentPoints(ctx);
         return success({
             ...result,
             student: student
         });
     }
 
-    private async getStudentPoint(ctx: Context): Promise<any> {
+    private async getStudentPoints(ctx: Context): Promise<any> {
         const classes: Class[] = [];
         const points = await ledger.getStates(ctx, "POINT", async (record: Point) => {
             if (record.studentId === this.currentPayload.id) {

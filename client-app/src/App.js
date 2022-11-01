@@ -23,6 +23,7 @@ import AdminInfo from "./components/admin/info";
 import TransactionDetail from "./components/admin/transaction/TransactionDetail";
 import StateHistory from "./components/admin/transaction/StateHistory";
 import Backup from "./components/admin/backup/Backup";
+import PointDetail from "./components/student/points/PointDetail";
 
 export default function App() {
   const payload = useContext(PayloadContext);
@@ -38,7 +39,10 @@ export default function App() {
           <Route path="/" element={<StudentLayout />}>
             <Route index element={<StudentInfo />} />
             <Route path="*" element={<NotFound />} />
-            <Route path="xem-diem" element={<StudentPoint />} />
+            <Route path="xem-diem" element={<Outlet />}>
+              <Route index element={<StudentPoint />} />
+              <Route path=":pointId" element={<PointDetail />} />
+            </Route>
           </Route>
         </Routes>
       );

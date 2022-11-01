@@ -128,7 +128,13 @@ const PointRow = ({ point, index }) => {
                         "Trượt" : "Đạt"
                 }
             </td>
-            <td className={`${className}`}><Link className="text-blue-600 hover:text-blue-600 hover:underline">Xem</Link></td>
+            <td className={`${className}`}>
+                <Link className="text-center mx-auto w-fit flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
+                    to={point.id}>
+                    <i className="my-auto text-xs fa-solid fa-eye" />
+                    <p className="ml-1.5 h-fit">Xem</p>
+                </Link>
+            </td>
         </tr>
     );
 }

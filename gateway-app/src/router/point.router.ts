@@ -53,12 +53,28 @@ pointRouter.post(
 );
 
 pointRouter.get(
-    '/get-point', async (req: Request, res: Response) => {
+    '/get-points', async (req: Request, res: Response) => {
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
             const result = await transaction.evaluate(
-                contract, 'Point:GetPoint', token
+                contract, 'Point:GetPoints', token
+            );
+            return handleTransactionRes(res, result);
+        } catch (err) {
+            return handleUnknownError(res, err);
+        }
+    }
+);
+
+pointRouter.get(
+    '/:pointId', async (req: Request, res: Response) => {
+        const contract: Contract = req.app.locals.contract;
+        const token: string = req.headers.token as string;
+        const pointId = req.params.pointId as string;
+        try {
+            const result = await transaction.evaluate(
+                contract, 'Point:GetPoint', token, pointId
             );
             return handleTransactionRes(res, result);
         } catch (err) {

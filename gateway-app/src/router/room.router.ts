@@ -26,7 +26,7 @@ roomRouter.get(
     '/:roomId', async (req: Request, res: Response) => {
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
-        const roomId = req.params.roomId as string
+        const roomId = req.params.roomId as string;
         try {
             let result = await transaction.evaluate(
                 contract, 'Room:GetRoom', token, roomId

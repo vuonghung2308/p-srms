@@ -3,7 +3,14 @@ import fetchJson, { fetchBlob } from "./fetch";
 
 export const getPoints = async () => {
     return fetchJson(
-        `${baseUrl}/point/get-point`,
+        `${baseUrl}/point/get-points`,
+        { method: 'GET' }
+    );
+}
+
+export const getPoint = async (pointId) => {
+    return fetchJson(
+        `${baseUrl}/point/${pointId}`,
         { method: 'GET' }
     );
 }
