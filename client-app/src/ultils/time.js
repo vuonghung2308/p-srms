@@ -22,3 +22,21 @@ export function strTime(timestamp) {
         `${hour.toString().padStart(2, '0')}:` +
         `${minute.toString().padStart(2, '0')}`;
 }
+
+export function strDate(timestamp) {
+    const time = new Date(timestamp * 1000);
+    const year = time.getFullYear();
+    const month = time.getMonth() + 1;
+    const date = time.getDate();
+    return `${year}/${month.toString().padStart(2, '0')}/` +
+        `${date.toString().padStart(2, '0')} `
+}
+
+
+export function strHour(timestamp) {
+    const time = new Date(timestamp * 1000);
+    const hour = time.getHours();
+    const minute = time.getMinutes();
+    return `${hour.toString().padStart(2, '0')}:` +
+        `${minute.toString().padStart(2, '0')}`;
+}
