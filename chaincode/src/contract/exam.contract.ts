@@ -30,14 +30,18 @@ export class ExamContract extends BaseContract {
         switch (this.currentPayload.type) {
             case "TEACHER": case "EMPLOYEE": {
                 const exams = await ledger.getStates(
-                    ctx, "EXAM", async (record) => {
+                    ctx, "EXAM", async (record: Exam) => {
                         if (record.roomId === roomId) {
+                            const point: Point = await ledger.getFirstState(
+                                ctx, "POINT", async (p: Point) => {
+                                    return p.examId === record.id;
+                                }
+                            )
                             const student = await ledger.getState(
-                                ctx, record.studentId, "STUDENT"
+                                ctx, point.studentId, "STUDENT"
                             );
-                            delete record.studentId;
                             if (this.currentPayload.type === "EMPLOYEE") {
-                                record.student = student;
+                                record['student'] = student;
                             }
                             return true;
                         } else { return false; }
@@ -138,7 +142,7 @@ export class ExamContract extends BaseContract {
         const exam: Exam = {
             id: examId, roomId: roomId,
             point: null, code: examCode,
-            status: null, note: null
+            status: null, note: null,
         };
         point.examId = examId;
         exam.docType = 'EXAM';

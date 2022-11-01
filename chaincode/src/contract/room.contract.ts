@@ -6,6 +6,7 @@ import { Room } from "../vo/room";
 import { failed, success } from "../ledger/response";
 import { Teacher } from "../vo/teacher";
 import { Subject } from "../vo/subject";
+import { Confirm } from "../vo/confirm";
 
 
 @Info({ title: 'RoomContract', description: 'Smart contract for Room' })
@@ -29,13 +30,13 @@ export class RoomContract extends BaseContract {
             case "TEACHER": {
                 rooms = await ledger.getStates(
                     ctx, "ROOM", async (record: Room) => {
-                        const values = await Promise.all([
+                        const [teacher, subject]: [Teacher, Subject] = await Promise.all([
                             ledger.getState(ctx, record.teacherId, "TEACHER"),
                             ledger.getState(ctx, record.subjectId, "SUBJECT")
                         ]);
-                        delete record.teacherId; record['teacher'] = values[0];
-                        delete record.subjectId; record['subject'] = values[1];
-                        return record.teacherId === this.currentPayload.id;
+                        delete record.teacherId; record['teacher'] = teacher;
+                        delete record.subjectId; record['subject'] = subject;
+                        return teacher.id === this.currentPayload.id;
                     }
                 );
                 break;
@@ -43,12 +44,12 @@ export class RoomContract extends BaseContract {
             case "EMPLOYEE": {
                 rooms = await ledger.getStates(
                     ctx, "ROOM", async (record: Room) => {
-                        const values = await Promise.all([
+                        const [teacher, subject]: [Teacher, Subject] = await Promise.all([
                             ledger.getState(ctx, record.teacherId, "TEACHER"),
                             ledger.getState(ctx, record.subjectId, "SUBJECT")
                         ]);
-                        delete record.teacherId; record['teacher'] = values[0];
-                        delete record.subjectId; record['subject'] = values[1];
+                        delete record.teacherId; record['teacher'] = teacher;
+                        delete record.subjectId; record['subject'] = subject;
                         return true;
                     });
                 break;
@@ -78,16 +79,26 @@ export class RoomContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const room: Room = await ledger.getState(
-            ctx, roomId, "ROOM"
-        );
+        const [room, confirm]: [Room, Confirm] = await Promise.all([
+            ledger.getState(ctx, roomId, "ROOM"),
+            ledger.getFirstState(ctx, "CONFIRM",
+                async (record: Confirm) => {
+                    return record.objectId === roomId
+                }
+            )
+        ]);
         if (room) {
-            const values = await Promise.all([
-                ledger.getState(ctx, room.teacherId, "TEACHER"),
-                ledger.getState(ctx, room.subjectId, "SUBJECT")
-            ])
-            delete room.teacherId; room['teacher'] = values[0];
-            delete room.subjectId; room['subject'] = values[1];
+            let confirmId: string = null;
+            if (confirm) confirmId = confirm.id;
+            const [teacher, subject, confirms]: [Teacher, Subject, Confirm[]]
+                = await Promise.all([
+                    ledger.getState(ctx, room.teacherId, "TEACHER"),
+                    ledger.getState(ctx, room.subjectId, "SUBJECT"),
+                    this.getConfirms(ctx, confirmId)
+                ]);
+            delete room.teacherId; room['teacher'] = teacher;
+            delete room.subjectId; room['subject'] = subject;
+            if (confirms.length !== 0) room['confirms'] = confirms;
             switch (this.currentPayload.type) {
                 case "TEACHER": {
                     if (room.teacherId === this.currentPayload.id) {
@@ -137,21 +148,27 @@ export class RoomContract extends BaseContract {
             });
         }
         const roomId = this.getRoomId(roomName, timeStart);
-        if (!await ledger.isStateExists(ctx, subjectId, "SUBJECT")) {
+        const [subject, teacher, currentRoom]: [Subject, Teacher, Room]
+            = await Promise.all([
+                ledger.getState(ctx, subjectId, "SUBJECT"),
+                ledger.getState(ctx, teacherId, "TEACHER"),
+                ledger.getState(ctx, roomId, "ROOM")
+            ]);
+        if (!subject) {
             return failed({
                 code: "NOT_EXISTED",
                 param: 'subjectId',
                 msg: `The subject ${subjectId} does not exist`
             });
         }
-        if (!await ledger.isStateExists(ctx, teacherId, "TEACHER")) {
+        if (!teacher) {
             return failed({
                 code: "NOT_EXISTED",
                 param: 'teacherId',
                 msg: `The teacher ${teacherId} does not exist`
             });
         }
-        if (await ledger.isStateExists(ctx, roomId, "ROOM")) {
+        if (currentRoom) {
             return failed({
                 code: "EXISTED",
                 param: 'roomId',
@@ -170,6 +187,8 @@ export class RoomContract extends BaseContract {
             room, room.docType
         );
         delete room.docType;
+        delete room.subjectId; room['subject'] = subject;
+        delete room.teacherId; room['teacher'] = teacher;
         return success(room);
     }
 
@@ -178,5 +197,36 @@ export class RoomContract extends BaseContract {
         const result = `${roomName}.${date.getFullYear()}.${date.getMonth()}` +
             `.${date.getDate()}.${date.getHours()}.${date.getMinutes()}`;
         return result;
+    }
+
+    private async getConfirms(
+        ctx: Context, confirmId: string
+    ): Promise<Confirm[]> {
+        const confirms = [];
+        const censors = {};
+        if (!confirmId) return confirms;
+        const history: [] = await ledger.getHistory(
+            ctx, `CONFIRM.${confirmId}`
+        );
+        for (const item of history) {
+            const value: Confirm = item['value'];
+            if (!censors[value.censorId2]) {
+                const censor = await ledger.getState(
+                    ctx, value.censorId2, "EMPLOYEE"
+                );
+                censors[value.censorId2] = censor;
+            }
+            const censor2 = censors[value.censorId2];
+            delete value.censorId1; delete value.censorId2;
+            delete value.docType;
+            const time = item['timestamp']['seconds'] / 1
+                + item['timestamp']['nanos'] / 1000000000;
+            confirms.push({
+                ...value, censor2,
+                time: Number(time)
+            });
+        }
+        confirms.sort((a, b) => b.time - a.time)
+        return confirms;
     }
 }

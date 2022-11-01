@@ -306,7 +306,7 @@ export function ClassStudents() {
                                             )
                                         ) && (
                                                 <td >
-                                                    <Link className="mx-auto w-fit flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
+                                                    <Link className="mx-auto w-[60px] flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
                                                         onClick={() => handleSelectedPoint(value)}>
 
                                                         {isEditing && value.id === selectedPoint.id ? (

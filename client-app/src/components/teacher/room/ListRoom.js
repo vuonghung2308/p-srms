@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getRooms } from "../../../api/room";
-import { Td, Th } from "../../../common/table";
+import { strTime } from "../../../ultils/time"
 
 export function ListRoom() {
     const [roomsRes, setRoomsRes] = useState({ status: "NONE" });
@@ -22,29 +22,39 @@ export function ListRoom() {
             </div>
             <hr />
             {roomsRes.status === "SUCCESS" && roomsRes.data.length > 0 && (
-                <table className="mt-6">
+                <table className="mt-6 w-full">
                     <thead>
-                        <tr>
-                            <Th>Mã môn học</Th>
-                            <Th>Năm học</Th>
-                            <Th>Kỳ học</Th>
-                            <Th>Tên phòng</Th>
-                            <Th>Thời gian bắt đầu</Th>
-                            <Th>Thời gian làm</Th>
-                            <Th></Th>
+                        <tr className="bg-gray-200 text-gray-600">
+                            <th className="border-4 border-white py-0.5">STT</th>
+                            <th className="border-4 border-white">Mã môn học</th>
+                            <th className="border-4 border-white">Tên môn học</th>
+                            <th className="border-4 border-white">Năm học</th>
+                            <th className="border-4 border-white">Kỳ học</th>
+                            <th className="border-4 border-white">Tên phòng</th>
+                            <th className="border-4 border-white">Thời gian bắt đầu</th>
+                            <th className="border-4 border-white">Thời gian làm</th>
+                            <th className="border-4 border-white"></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {roomsRes.data.map(value => {
+                        {roomsRes.data.map((value, index) => {
                             return (
-                                <tr key={value.id}>
-                                    <Td>{value.subjectId}</Td>
-                                    <Td>{value.year}-{value.year + 1}</Td>
-                                    <Td>{value.semester}</Td>
-                                    <Td>{value.roomName}</Td>
-                                    <Td>{new Date(value.timeStart * 1000).toLocaleString()}</Td>
-                                    <Td>{value.duration}</Td>
-                                    <Td><Link className="text-blue-600 hover:text-blue-600 hover:underline" to={`${value.id}`}>Chi tiết</Link></Td>
+                                <tr className="border-b" key={value.id}>
+                                    <td className="text-center py-0.5">{index + 1}</td>
+                                    <td className="text-center">{value.subject.id}</td>
+                                    <td className="pl-4">{value.subject.name}</td>
+                                    <td className="text-center">{value.year}-{value.year + 1}</td>
+                                    <td className="text-center">{value.semester}</td>
+                                    <td className="text-center">{value.roomName}</td>
+                                    <td className="text-center">{strTime(value.timeStart)}</td>
+                                    <td className="text-center">{value.duration}</td>
+                                    <td className="text-center">
+                                        <Link className="mx-auto w-fit flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
+                                            to={`${value.id}`}>
+                                            <p className="h-fit">Chi tiết</p>
+                                            <i class="fa-solid fa-caret-down my-auto ml-1" />
+                                        </Link>
+                                    </td>
                                 </tr>
                             );
                         })}

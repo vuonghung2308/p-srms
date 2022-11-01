@@ -22,6 +22,22 @@ const Content = ({ className }) => {
                     to="phong-thi">
                     Phòng thi
                 </Link>
+                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
+                    to="">
+                    Phúc khảo
+                </Link>
+                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
+                    to="">
+                    Môn học
+                </Link>
+                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
+                    to="">
+                    Giảng viên
+                </Link>
+                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
+                    to="">
+                    Sinh viên
+                </Link>
             </div>
             <hr />
             <div className="container mx-auto px-44"><Outlet /></div>

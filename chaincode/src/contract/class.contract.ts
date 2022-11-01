@@ -120,7 +120,7 @@ export class ClassContract extends BaseContract {
             const [subject, teacher, confirms] = await Promise.all([
                 ledger.getState(ctx, cls.subjectId, "SUBJECT"),
                 ledger.getState(ctx, cls.teacherId, "TEACHER"),
-                getConfirmsForClass(ctx, confirmId)
+                this.getConfirms(ctx, confirmId)
             ]);
             if (confirms.length !== 0) cls['confirms'] = confirms;
             delete cls.subjectId; cls["subject"] = subject;
@@ -358,42 +358,42 @@ export class ClassContract extends BaseContract {
         delete point.docType;
         return success({ ...point, student });
     }
-}
 
-const getConfirmsForClass = async (
-    ctx: Context, confirmId: string
-): Promise<Confirm[]> => {
-    const confirms = [];
-    const censors = {};
-    if (!confirmId) return confirms;
-    const history: [] = await ledger.getHistory(
-        ctx, `CONFIRM.${confirmId}`
-    );
-    for (const item of history) {
-        const value: Confirm = item['value'];
-        if (!censors[value.censorId1]) {
-            const censor = await ledger.getState(
-                ctx, value.censorId1, "TEACHER"
-            );
-            censors[value.censorId1] = censor;
+    private async getConfirms(
+        ctx: Context, confirmId: string
+    ): Promise<Confirm[]> {
+        const confirms = [];
+        const censors = {};
+        if (!confirmId) return confirms;
+        const history: [] = await ledger.getHistory(
+            ctx, `CONFIRM.${confirmId}`
+        );
+        for (const item of history) {
+            const value: Confirm = item['value'];
+            if (!censors[value.censorId1]) {
+                const censor = await ledger.getState(
+                    ctx, value.censorId1, "TEACHER"
+                );
+                censors[value.censorId1] = censor;
+            }
+            if (!censors[value.censorId2]) {
+                const censor = await ledger.getState(
+                    ctx, value.censorId2, "EMPLOYEE"
+                );
+                censors[value.censorId2] = censor;
+            }
+            const censor1 = censors[value.censorId1];
+            const censor2 = censors[value.censorId2];
+            delete value.censorId1; delete value.censorId2;
+            delete value.docType;
+            const time = item['timestamp']['seconds'] / 1
+                + item['timestamp']['nanos'] / 1000000000;
+            confirms.push({
+                ...value, censor1, censor2,
+                time: Number(time)
+            });
         }
-        if (!censors[value.censorId2]) {
-            const censor = await ledger.getState(
-                ctx, value.censorId2, "EMPLOYEE"
-            );
-            censors[value.censorId2] = censor;
-        }
-        const censor1 = censors[value.censorId1];
-        const censor2 = censors[value.censorId2];
-        delete value.censorId1; delete value.censorId2;
-        delete value.docType;
-        const time = item['timestamp']['seconds'] / 1
-            + item['timestamp']['nanos'] / 1000000000;
-        confirms.push({
-            ...value, censor1, censor2,
-            time: Number(time)
-        });
+        confirms.sort((a, b) => b.time - a.time)
+        return confirms;
     }
-    confirms.sort((a, b) => b.time - a.time)
-    return confirms;
 }

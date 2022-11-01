@@ -10,7 +10,6 @@ export class Point {
     public studentId: string;
     @Property()
     public classId: string;
-
     @Property()
     public attendancePoint: number;
     @Property()

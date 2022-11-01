@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getExams, updatePoint } from "../../../api/exam";
-import { TextInput } from "../../../common/components/input";
-import { Td, Th } from "../../../common/table";
 
 export function ListExam() {
     const { roomId } = useParams();
@@ -46,38 +44,45 @@ export function ListExam() {
             </div>
             <hr />
             {examsRes.status === "SUCCESS" && examsRes.data.length && (
-                <table className="mt-6">
+                <table className="mt-6 w-full">
                     <thead>
-                        <tr>
-                            <Th>STT</Th>
-                            <Th>Mã phách</Th>
-                            <Th>Điểm</Th>
-                            <Th />
+                        <tr className="bg-gray-200 text-gray-600">
+                            <th className="border-4 border-white py-0.5">STT</th>
+                            <th className="border-4 border-white">Mã phách</th>
+                            <th className="border-4 border-white">Điểm</th>
+                            <th className="border-4 border-white"></th>
                         </tr>
                     </thead>
                     <tbody>
                         {examsRes.data.map((value, index) => (
-                            <tr key={value.code}>
-                                <Td className="py-3">{index + 1}</Td>
-                                <Td>{value.code}</Td>
-                                <Td>
+                            <tr className="border-b" key={value.code}>
+                                <td className="text-center py-0.5">{index + 1}</td>
+                                <td className="text-center">{value.code}</td>
+                                <td className="text-center">
                                     {isEditing && value.code === selectedExam.code ? (
-                                        <TextInput className="w-14 text-center"
-                                            text={selectedExam.point ? selectedExam.point : ''}
+                                        <input className="h-5 w-10 text-center border-b border-b-gray-400 outline-none focus:border-b-red-dark"
+                                            value={selectedExam.point ? selectedExam.point : ''}
                                             onChange={e => {
                                                 setSelectedExam({
                                                     ...selectedExam,
                                                     point: e.target.value
                                                 });
                                             }} />
-                                    ) : (<p className="w-14">{value.point}</p>)}
-                                </Td>
-                                <Td>
-                                    <Link className="text-blue-600 hover:text-blue-600 hover:underline"
+                                    ) : (value.point)}
+                                </td>
+                                <td >
+                                    <Link className="text-center mx-auto w-[60px] flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
                                         onClick={() => handleSelectedExam(value)}>
-                                        {isEditing && value.code === selectedExam.code ? "Lưu" : "Sửa"}
+                                        {isEditing && value.code === selectedExam.code ? (
+                                            <i className="text-xs fa-solid fa-floppy-disk my-auto"></i>
+                                        ) : (
+                                            <i className="text-xs fa-solid fa-pen-to-square my-auto"></i>
+                                        )}
+                                        <p className="ml-1.5 h-fit">
+                                            {isEditing && value.code === selectedExam.code ? "Lưu" : "Sửa"}
+                                        </p>
                                     </Link>
-                                </Td>
+                                </td>
                             </tr>
                         ))}
                     </tbody>

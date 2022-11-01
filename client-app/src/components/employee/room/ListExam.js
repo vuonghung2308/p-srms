@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getExams } from "../../../api/exam";
 import { getRoom } from "../../../api/room";
-import { Td, Th } from "../../../common/table";
 import useModal from "../../common/Modal/use";
 import AddExam from "./AddExams";
 
@@ -47,7 +46,7 @@ export function ListExam() {
                         <p className="inline ml-4">Tên giáo viên: {roomRes.data.teacher.name}</p>
                     </div>
                     <div>
-                        <p className="inline">Thời gian bắt đầu: {new Date(roomRes.data.timeStart*1000).toLocaleString()}</p>
+                        <p className="inline">Thời gian bắt đầu: {new Date(roomRes.data.timeStart * 1000).toLocaleString()}</p>
                         <p className="inline ml-4">Thời gian làm bài: {roomRes.data.duration} phút</p>
                     </div>
                 </div>
@@ -58,24 +57,24 @@ export function ListExam() {
                     <p className="font-semibold text-xl text-gray-600">Danh sách bài thi</p>
                     <table className="mt-4 w-[100%]">
                         <thead>
-                            <tr>
-                                <Th>STT</Th>
-                                <Th>Mã bài thi</Th>
-                                <Th>Mã phách</Th>
-                                <Th>Mã sinh viên</Th>
-                                <Th>Họ và tên</Th>
-                                <Th>Điểm số</Th>
+                            <tr className="bg-gray-200 text-gray-600">
+                                <th className="border-4 border-white py-0.5">STT</th>
+                                <th className="border-4 border-white">Mã bài thi</th>
+                                <th className="border-4 border-white">Mã phách</th>
+                                <th className="border-4 border-white">Mã sinh viên</th>
+                                <th className="border-4 border-white">Họ và tên</th>
+                                <th className="border-4 border-white">Điểm số</th>
                             </tr>
                         </thead>
                         <tbody>
                             {examsRes.data.map((value, index) => (
-                                <tr key={value.code}>
-                                    <Td>{index + 1}</Td>
-                                    <Td>{value.id}</Td>
-                                    <Td>{value.code}</Td>
-                                    <Td>{value.student.id}</Td>
-                                    <Td>{value.student.name}</Td>
-                                    <Td>{value.point}</Td>
+                                <tr className="border-b" key={value.code}>
+                                    <td className="text-center py-0.5">{index + 1}</td>
+                                    <td className="text-center">{value.id}</td>
+                                    <td className="text-center">{value.code}</td>
+                                    <td className="text-center">{value.student.id}</td>
+                                    <td className="pl-4">{value.student.name}</td>
+                                    <td className="text-center">{value.point}</td>
                                 </tr>
                             ))}
                         </tbody>
