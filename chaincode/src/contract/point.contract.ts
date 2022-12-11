@@ -21,8 +21,8 @@ export class PointContract extends BaseContract {
     public async SetPoint(
         ctx: Context, token: string,
         studentId: string, classId: string,
-        attendancePoint: number, practicePoint: number,
-        midtermExamPoint: number, exercisePoint: number
+        attendancePoint: string, practicePoint: string,
+        midtermExamPoint: string, exercisePoint: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
             jwt.verifyTeacher(token)
@@ -60,11 +60,18 @@ export class PointContract extends BaseContract {
                 msg: `The student ${studentId} is not in class ${classId}`
             });
         }
-
-        point.attendancePoint = attendancePoint;
-        point.practicePoint = practicePoint;
-        point.midtermExamPoint = midtermExamPoint;
-        point.exercisePoint = exercisePoint;
+        if (attendancePoint !== "undefined") {
+            point.attendancePoint = Number(attendancePoint);
+        } else point.attendancePoint = null;
+        if (practicePoint !== "undefined") {
+            point.practicePoint = Number(practicePoint);
+        } else point.practicePoint = null;
+        if (midtermExamPoint !== "undefined") {
+            point.midtermExamPoint = Number(midtermExamPoint);
+        } else point.midtermExamPoint = null;
+        if (exercisePoint !== "undefined") {
+            point.exercisePoint = Number(exercisePoint);
+        }
         point.docType = 'POINT'
         await ledger.putState(
             ctx, this, point.id,

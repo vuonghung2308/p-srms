@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { getClass, getStudents, updatePoint } from "../../../api/class";
 import { PayloadContext } from "../../../common/token";
 import { strTime } from "../../../ultils/time";
@@ -13,7 +13,6 @@ export function ClassStudents() {
     const payload = useContext(PayloadContext);
     const [pointsRes, setPointsRes] = useState({ status: "NONE" });
     const [classRes, setClassRes] = useState({ status: "NONE" });
-    const [selectedPoint, setSelectedPoint] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const confirmId = useRef('');
     const { classId } = useParams();
@@ -51,26 +50,44 @@ export function ClassStudents() {
         }
     }, [classId]);
 
-    const handleSelectedPoint = (value) => {
-        if (isEditing && selectedPoint.id === value.id) {
+    const changePoint = (value, type, index) => {
+        if (value === "" || !value) value = null;
+        const newPoint = pointsRes.data.map((p, i) => {
+            if (index === i) {
+                const point = { ...p };
+                switch (type) {
+                    case "AP": point.attendancePoint = value;
+                        break;
+                    case "PP": point.practicePoint = value;
+                        break;
+                    case "EP": point.exercisePoint = value;
+                        break;
+                    case "MP":
+                    default: point.midtermExamPoint = value;
+                        break;
+                }
+                return point;
+            } else return p;
+        })
+        setPointsRes({
+            ...pointsRes,
+            data: newPoint
+        })
+    }
+
+    const handleSavePoint = () => {
+        for (let i = 0; i < pointsRes.data.length; i++) {
+            const point = { ...pointsRes.data[i] };
+            for (const key in point) {
+                if (point[key] === null) {
+                    point[key] = undefined;
+                }
+            }
             updatePoint(
-                selectedPoint.student.id, selectedPoint.classId,
-                selectedPoint.attendancePoint, selectedPoint.exercisePoint,
-                selectedPoint.midtermExamPoint, selectedPoint.practicePoint
-            ).then(() => {
-                setPointsRes({
-                    ...pointsRes,
-                    data: pointsRes.data.map(v => {
-                        if (selectedPoint.id === v.id) {
-                            return selectedPoint;
-                        } else return v;
-                    })
-                });
-                setIsEditing(false);
-            });
-        } else {
-            setSelectedPoint(value);
-            setIsEditing(true);
+                point.student.id, point.classId,
+                point.attendancePoint, point.exercisePoint,
+                point.midtermExamPoint, point.practicePoint
+            )
         }
     }
 
@@ -181,20 +198,46 @@ export function ClassStudents() {
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thành phần</p>
                         {classRes.data && classRes.data.teacher.id === payload.id && (
                             <>
+                                {classRes.data && (classRes.data.teacher.id === payload.id &&
+                                    (!classRes.data.confirms ||
+                                        (classRes.data.confirms && classRes.data.confirms[0].status === "CANCELED") ||
+                                        (classRes.data.confirms && classRes.data.confirms[0].status.includes("REJECTED"))
+                                    )
+                                ) && (
+                                        <button className="w-[106px] ml-4 mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                            onClick={() => {
+                                                if (isEditing) { handleSavePoint(); }
+                                                setIsEditing(!isEditing)
+                                            }} >
+                                            {isEditing ? (
+                                                <>
+                                                    <i className="w-[12px] text-xs fa-solid fa-floppy-disk my-auto" />
+                                                    <p className="ml-2 my-auto">Lưu điểm</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <i className="w-[12px] text-xs fa-solid fa-pen-to-square my-auto" />
+                                                    <p className="ml-2 my-auto">Sửa điểm</p>
+                                                </>
+                                            )}
+                                        </button>
+                                    )
+                                }
+
                                 {(!classRes.data.confirms || classRes.data.confirms[0].status === "CANCELED" ||
                                     classRes.data.confirms[0].status.includes("REJECTED")) && (
                                         <>
-                                            <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                            <button className="mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                                 onClick={creationToggle} >
                                                 <i className="my-auto text-xs fa-solid fa-plus" />
-                                                <p className="ml-2 my-auto">Tạo yêu cầu</p>
+                                                <p className="ml-2 my-auto">Yêu cầu duyệt</p>
                                             </button>
                                         </>
                                     )
                                 }
                                 {classRes.data.confirms && classRes.data.confirms[0].status === "INITIALIZED" && (
                                     <>
-                                        <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                        <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                             onClick={cancelationToggle} >
                                             <i className="my-auto text-xs fa-solid fa-ban" />
                                             <p className="ml-2 my-auto">Hủy yêu cầu</p>
@@ -231,12 +274,6 @@ export function ClassStudents() {
                                 <th className="border-4 border-white">Điểm BT</th>
                                 <th className="border-4 border-white">Điểm KT</th>
                                 <th className="border-4 border-white">Điểm Thi</th>
-                                {classRes.data && (classRes.data.teacher.id === payload.id &&
-                                    (!classRes.data.confirms ||
-                                        (classRes.data.confirms && classRes.data.confirms[0].status === "CANCELED") ||
-                                        (classRes.data.confirms && classRes.data.confirms[0].status.includes("REJECTED"))
-                                    )
-                                ) && (<th className="border-4 border-white" />)}
                             </tr>
                         </thead>
                         <tbody>
@@ -247,78 +284,34 @@ export function ClassStudents() {
                                         <td className="text-center">{value.student.id}</td>
                                         <td className="text-start pl-4">{value.student.name}</td>
                                         <td className="text-center">
-                                            {isEditing && value.id === selectedPoint.id ? (
+                                            {isEditing ? (
                                                 <input className="h-5 w-10 text-center border-b border-b-gray-400 outline-none focus:border-b-red-dark"
-                                                    value={selectedPoint.attendancePoint ?
-                                                        selectedPoint.attendancePoint : ''}
-                                                    onChange={e => {
-                                                        setSelectedPoint({
-                                                            ...selectedPoint,
-                                                            attendancePoint: e.target.value
-                                                        });
-                                                    }} />
+                                                    value={value.attendancePoint !== null ? value.attendancePoint : ""}
+                                                    onChange={e => changePoint(e.target.value, "AP", index)} />
                                             ) : (value.attendancePoint)}
                                         </td>
                                         <td className="text-center">
-                                            {isEditing && value.id === selectedPoint.id ? (
+                                            {isEditing ? (
                                                 <input className="h-5 w-10 text-center border-b border-b-gray-400 outline-none focus:border-b-red-dark"
-                                                    value={selectedPoint.practicePoint != null ?
-                                                        selectedPoint.practicePoint : ''}
-                                                    onChange={e => {
-                                                        setSelectedPoint({
-                                                            ...selectedPoint,
-                                                            practicePoint: e.target.value
-                                                        });
-                                                    }} />
+                                                    value={value.practicePoint !== null ? value.practicePoint : ""}
+                                                    onChange={e => changePoint(e.target.value, "PP", index)} />
                                             ) : (value.practicePoint)}
                                         </td>
                                         <td className="text-center">
-                                            {isEditing && value.id === selectedPoint.id ? (
+                                            {isEditing ? (
                                                 <input className="h-5 w-10 text-center border-b border-b-gray-400 outline-none focus:border-b-red-dark"
-                                                    value={selectedPoint.exercisePoint != null ?
-                                                        selectedPoint.exercisePoint : ''}
-                                                    onChange={e => {
-                                                        setSelectedPoint({
-                                                            ...selectedPoint,
-                                                            exercisePoint: e.target.value
-                                                        });
-                                                    }} />
+                                                    value={value.exercisePoint !== null ? value.exercisePoint : ""}
+                                                    onChange={e => changePoint(e.target.value, "EP", index)} />
                                             ) : (value.exercisePoint)}
                                         </td>
                                         <td className="text-center">
-                                            {isEditing && value.id === selectedPoint.id ? (
+                                            {isEditing ? (
                                                 <input className="h-5 w-10 text-center border-b border-b-gray-400 outline-none focus:border-b-red-dark"
-                                                    value={selectedPoint.midtermExamPoint != null ?
-                                                        selectedPoint.midtermExamPoint : ''}
-                                                    onChange={e => {
-                                                        setSelectedPoint({
-                                                            ...selectedPoint,
-                                                            midtermExamPoint: e.target.value
-                                                        });
-                                                    }} />
+                                                    value={value.midtermExamPoint !== null ? value.midtermExamPoint : ""}
+                                                    onChange={e => changePoint(e.target.value, "MP", index)} />
                                             ) : (value.midtermExamPoint)}
                                         </td>
                                         <td className="text-center">{value.examPoint}</td>
-                                        {classRes.data && (classRes.data.teacher.id === payload.id &&
-                                            (!classRes.data.confirms ||
-                                                (classRes.data.confirms && classRes.data.confirms[0].status === "CANCELED") ||
-                                                (classRes.data.confirms && classRes.data.confirms[0].status.includes("REJECTED"))
-                                            )
-                                        ) && (
-                                                <td >
-                                                    <Link className="mx-auto w-[60px] flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
-                                                        onClick={() => handleSelectedPoint(value)}>
-
-                                                        {isEditing && value.id === selectedPoint.id ? (
-                                                            <i className="text-xs fa-solid fa-floppy-disk my-auto"></i>
-                                                        ) : (
-                                                            <i className="text-xs fa-solid fa-pen-to-square my-auto"></i>
-                                                        )}
-                                                        <p className="ml-1.5 h-fit">{isEditing && value.id === selectedPoint.id ? "Lưu" : "Sửa"}</p>
-                                                    </Link>
-                                                </td>
-                                            )
-                                        }
                                     </tr>
                                 );
                             })}

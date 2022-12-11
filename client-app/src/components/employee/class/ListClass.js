@@ -60,7 +60,7 @@ export function ListClass() {
                                         <Link className="mx-auto w-fit flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
                                             to={`${value.id}`}>
                                             <p className="h-fit">Chi tiết</p>
-                                            <i class="fa-solid fa-caret-down my-auto ml-1" />
+                                            <i className="fa-solid fa-caret-down my-auto ml-1" />
                                         </Link>
                                     </td>
                                 </tr>
