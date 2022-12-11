@@ -27,13 +27,13 @@ import PointDetail from "./components/student/points/PointDetail";
 
 export default function App() {
   const payload = useContext(PayloadContext);
-  useEffect(() => {
-    document.title = 'P-SRMS - Hệ thống quản lý kết quả học tập';
-  }, []);
-
   let routes;
+  const setTitle = () => {
+    document.title = 'P-SRMS - Hệ thống quản lý kết quả học tập';
+  }
   switch (payload.type) {
     case "STUDENT": {
+      setTitle();
       routes = (
         <Routes>
           <Route path="/" element={<StudentLayout />}>
@@ -49,6 +49,7 @@ export default function App() {
       break;
     }
     case "EMPLOYEE": {
+      setTitle();
       routes = (
         <Routes>
           <Route path="/" element={<EmployeeLayout />}>
@@ -72,6 +73,7 @@ export default function App() {
       break;
     }
     case "TEACHER": {
+      setTitle();
       routes = (
         <Routes>
           <Route path="/" element={<TeacherLayout />}>
@@ -93,6 +95,7 @@ export default function App() {
       break;
     }
     case "ADMIN": {
+      setTitle();
       routes = (
         <Routes>
           <Route path="/" element={<AdminLayout />}>
@@ -107,6 +110,7 @@ export default function App() {
       break;
     }
     default: {
+      setTitle();
       routes = (
         <Routes>
           <Route path="/" element={<Login />} />
