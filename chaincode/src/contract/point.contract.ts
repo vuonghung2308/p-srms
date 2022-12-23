@@ -279,10 +279,9 @@ export class PointContract extends BaseContract {
                 if (exam && confirm && confirm.status === "DONE") {
                     record['examPoint'] = exam.point;
                 }
-                if (record['examPoint'] != null && record.attendancePoint != null &&
-                    record.exercisePoint != null && record.practicePoint != null &&
-                    record.midtermExamPoint != null
-                ) { calculateAveragePoint(record); }
+                if (record['examPoint'] != null) {
+                    calculateAveragePoint(record);
+                }
                 return true;
             }
             return false;
