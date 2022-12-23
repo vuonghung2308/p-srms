@@ -46,7 +46,7 @@ export const getStates = async (
         const strValue = Buffer.from(
             result.value.value
         ).toString('utf-8');
-        let record;
+        let record: any;
         try {
             record = JSON.parse(strValue);
             if (record.docType !== docType) {
@@ -118,6 +118,7 @@ export const putState = async (
         `${docType}.${id}`,
         utils.toBuffer(value)
     );
+    console.log(`${docType}.${id}`);
     contract.pushCurrentKey(
         `${docType}.${id}`
     );

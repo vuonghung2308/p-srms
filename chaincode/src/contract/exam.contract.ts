@@ -161,7 +161,7 @@ export class ExamContract extends BaseContract {
     @Transaction()
     public async SetPoint(
         ctx: Context, token: string,
-        examCode: string, point: number
+        examId: string, point: string
     ): Promise<string> {
         const status = this.setCurrentPayload(
             jwt.verifyTeacher(token)
@@ -173,14 +173,16 @@ export class ExamContract extends BaseContract {
                 msg: status.msg
             });
         }
-        const exam: Exam = await this.getExamByCode(ctx, examCode);
+        const exam: Exam = await ledger.getState(ctx, examId, "EXAM");
         if (exam) {
             const room: Room = await ledger.getState(
                 ctx, exam.roomId, "ROOM"
             );
             if (room && room.teacherId === this.currentPayload.id) {
                 exam.docType = "EXAM";
-                exam.point = point;
+                if (point !== "undefined") {
+                    exam.point = Number(point);
+                } else exam.point = null;
                 await ledger.putState(
                     ctx, this, exam.id,
                     exam, exam.docType
@@ -198,23 +200,11 @@ export class ExamContract extends BaseContract {
             return failed({
                 code: "NOT_EXISTED",
                 param: 'examCode',
-                msg: `The exam ${examCode} does not exist`
+                msg: `The exam ${examId} does not exist`
             });
         }
     }
 
-    private async getExamByCode(
-        ctx: Context, code: string
-    ): Promise<Exam> {
-        let exams = await ledger.getStates(
-            ctx, "EXAM", async (record: Exam) => {
-                return record.code === code;
-            }
-        );
-        if (!exams || exams.length === 0) {
-            return null;
-        } else return exams[0];
-    }
 
     private async getExamCode(
         ctx: Context, year: number,

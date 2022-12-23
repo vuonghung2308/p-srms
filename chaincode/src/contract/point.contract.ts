@@ -71,7 +71,7 @@ export class PointContract extends BaseContract {
         } else point.midtermExamPoint = null;
         if (exercisePoint !== "undefined") {
             point.exercisePoint = Number(exercisePoint);
-        }
+        } else point.exercisePoint = null;
         point.docType = 'POINT'
         await ledger.putState(
             ctx, this, point.id,

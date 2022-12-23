@@ -27,7 +27,7 @@ examRouter.get(
 examRouter.post(
     '/set-point',
     body('examCode', 'must be a string').notEmpty(),
-    body('point', 'must be a number').isNumeric(),
+    body('point', 'must be a number').optional().isNumeric(),
     async (req: Request, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -44,7 +44,7 @@ examRouter.post(
 
         const contract: Contract = req.app.locals.contract;
         const examCode: string = req.body.examCode;
-        const point: string = req.body.point.toString();
+        const point: string = String(req.body.point);
         const token: string = req.headers.token as string;
 
         try {
@@ -52,8 +52,10 @@ examRouter.post(
                 contract, 'Exam:SetPoint',
                 token, examCode, point
             );
+            console.log(result);
             return handleTransactionRes(res, result);
         } catch (err) {
+            console.log(err);
             return handleUnknownError(res, err);
         }
     }

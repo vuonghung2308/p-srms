@@ -52,7 +52,7 @@ export function ClassStudents() {
 
     const changePoint = (value, type, index) => {
         if (value === "" || !value) value = null;
-        const newPoint = pointsRes.data.map((p, i) => {
+        const newPoints = pointsRes.data.map((p, i) => {
             if (index === i) {
                 const point = { ...p };
                 switch (type) {
@@ -71,11 +71,11 @@ export function ClassStudents() {
         })
         setPointsRes({
             ...pointsRes,
-            data: newPoint
+            data: newPoints
         })
     }
 
-    const handleSavePoint = () => {
+    const handleSavePoints = () => {
         for (let i = 0; i < pointsRes.data.length; i++) {
             const point = { ...pointsRes.data[i] };
             for (const key in point) {
@@ -206,7 +206,7 @@ export function ClassStudents() {
                                 ) && (
                                         <button className="w-[106px] ml-4 mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                             onClick={() => {
-                                                if (isEditing) { handleSavePoint(); }
+                                                if (isEditing) { handleSavePoints(); }
                                                 setIsEditing(!isEditing)
                                             }} >
                                             {isEditing ? (

@@ -127,8 +127,8 @@ Channel: &ChannelDefaults
             Rule: "MAJORITY Admins"
     Capabilities:
         <<: *ChannelCapabilities
+    
 Profiles:
-
     TwoOrgsApplicationGenesis:
         <<: *ChannelDefaults
         Orderer:

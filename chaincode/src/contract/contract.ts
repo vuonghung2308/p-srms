@@ -27,7 +27,7 @@ export class BaseContract extends Contract {
         super.afterTransaction(ctx, result);
         const txId = ctx.stub.getTxID();
         const time = ctx.stub.getTxTimestamp();
-        let creator
+        let creator: any
         if (this.currentPayload && this.currentPayload.id) {
             creator = this.currentPayload.id;
         } else { creator = ctx.stub.getCreator().mspid }

@@ -4,7 +4,7 @@ export const PayloadContext = createContext(null);
 export const PayloadDispatchContext = createContext(null);
 
 export const getPayload = () => {
-    const strPayload = sessionStorage.getItem('user-payload');
+    const strPayload = localStorage.getItem('user-payload');
     if (strPayload) {
         return JSON.parse(strPayload);
     } else {
@@ -14,7 +14,7 @@ export const getPayload = () => {
 
 const savePayload = (payload) => {
     if (payload) {
-        sessionStorage.setItem(
+        localStorage.setItem(
             'user-payload',
             JSON.stringify(payload)
         );
@@ -22,7 +22,7 @@ const savePayload = (payload) => {
 }
 
 const removePayload = () => {
-    sessionStorage.removeItem('user-payload');
+    localStorage.removeItem('user-payload');
 }
 
 const payloadReducer = (_payload, action) => {

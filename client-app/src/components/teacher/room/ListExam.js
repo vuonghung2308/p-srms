@@ -1,17 +1,14 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useParams } from "react-router-dom";
 import { getExams, updatePoint } from "../../../api/exam";
 import { getRoom } from "../../../api/room";
 import useModal from "../../common/Modal/use";
 import CancelConfirm from "./CancelConfirm";
 import { strTime } from "../../../ultils/time";
 import CreateConfirm from "./CreateConfirm";
-import { PayloadContext } from "../../../common/token";
 
 export function ListExam() {
     const { roomId } = useParams();
-    const payload = useContext(PayloadContext);
-    const [selectedExam, setSelectedExam] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [examsRes, setExamsRes] = useState({ status: "NONE" });
     const [roomRes, setRoomRes] = useState({ status: "NONE" });
@@ -39,25 +36,28 @@ export function ListExam() {
             });
         }
     }, [roomId]);
-    const handleSelectedExam = (value) => {
-        if (isEditing && selectedExam.point && value.code === selectedExam.code) {
-            updatePoint(
-                selectedExam.code,
-                selectedExam.point
-            ).then(() => {
-                setExamsRes({
-                    ...examsRes,
-                    data: examsRes.data.map(v => {
-                        if (selectedExam.code === v.code) {
-                            return selectedExam;
-                        } else return v;
-                    })
-                });
-                setIsEditing(false);
-            });
-        } else {
-            setSelectedExam(value);
-            setIsEditing(true);
+
+    const changePoint = (value, index) => {
+        if (value === "" || !value) value = null;
+        const newExams = examsRes.data.map((e, i) => {
+            if (index === i) {
+                const exam = { ...e, point: value };
+                return exam;
+            } else return e;
+        })
+        setExamsRes({
+            ...examsRes,
+            data: newExams
+        })
+    }
+
+    const handleSaveExams = async () => {
+        for (let i = 0; i < examsRes.data.length; i++) {
+            const exam = examsRes.data[i];
+            if (exam.point === null) {
+                exam.point = undefined;
+            }
+            updatePoint(exam.id, exam.point);
         }
     }
 
@@ -115,16 +115,35 @@ export function ListExam() {
                 <>
                     <div className="my-3 flex">
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thi</p>
+
                         {roomRes.data && (!roomRes.data.confirms ||
                             roomRes.data.confirms[0].status === "CANCELED" ||
                             roomRes.data.confirms[0].status === "E_REJECTED"
                         ) && (
-                                <button className="mx-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
-                                    onClick={creationToggle} >
-                                    <i className="my-auto text-xs fa-solid fa-check" />
-                                    <p className="ml-2 my-auto">Nộp bảng điểm</p>
-                                </button>
-
+                                <>
+                                    <button className="w-[106px] ml-4 mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                        onClick={() => {
+                                            if (isEditing) { handleSaveExams(); }
+                                            setIsEditing(!isEditing)
+                                        }} >
+                                        {isEditing ? (
+                                            <>
+                                                <i className="w-[12px] text-xs fa-solid fa-floppy-disk my-auto" />
+                                                <p className="ml-2 my-auto">Lưu điểm</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="w-[12px] text-xs fa-solid fa-pen-to-square my-auto" />
+                                                <p className="ml-2 my-auto">Sửa điểm</p>
+                                            </>
+                                        )}
+                                    </button>
+                                    <button className="mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                        onClick={creationToggle} >
+                                        <i className="my-auto text-xs fa-solid fa-check" />
+                                        <p className="ml-2 my-auto">Nộp bảng điểm</p>
+                                    </button>
+                                </>
                             )
                         }
                         {roomRes.data && (roomRes.data.confirms && roomRes.data.confirms[0].status === "INITIALIZED") && (
@@ -138,37 +157,36 @@ export function ListExam() {
                     <table className="mt-3 w-full">
                         <thead>
                             <tr className="bg-gray-200 text-gray-600">
-                                <th className="border-4 border-white py-0.5 w-[50px]">STT</th>
-                                <th className="border-4 border-white w-[120px]">Mã phách</th>
-                                <th className="border-4 border-white">Ghi chú</th>
+                                <th className="border-4 border-white py-0.5">STT</th>
+                                <th className="border-4 border-white">Mã bài thi</th>
+                                <th className="border-4 border-white">Mã phách</th>
+                                <th className="border-4 border-white">Mã sinh viên</th>
+                                <th className="border-4 border-white">Họ và tên</th>
                                 <th className="border-4 border-white w-[100px]">Điểm</th>
-                                {roomRes.data && (roomRes.data.teacher.id === payload.id &&
+                                {/* {roomRes.data && (roomRes.data.teacher.id === payload.id &&
                                     (!roomRes.data.confirms ||
                                         (roomRes.data.confirms && roomRes.data.confirms[0].status === "CANCELED") ||
                                         (roomRes.data.confirms && roomRes.data.confirms[0].status.includes("REJECTED"))
                                     )
-                                ) && (<th className="border-4 border-white w-[100px]"></th>)}
+                                ) && (<th className="border-4 border-white w-[100px]"></th>)} */}
                             </tr>
                         </thead>
                         <tbody>
                             {examsRes.data.map((value, index) => (
                                 <tr className="border-b" key={value.code}>
                                     <td className="text-center py-0.5">{index + 1}</td>
+                                    <td className="text-center">{value.id}</td>
                                     <td className="text-center">{value.code}</td>
                                     <td className="text-center"></td>
+                                    <td className="text-center"></td>
                                     <td className="text-center">
-                                        {isEditing && value.code === selectedExam.code ? (
+                                        {isEditing ? (
                                             <input className="h-5 w-10 text-center border-b border-b-gray-400 outline-none focus:border-b-red-dark"
-                                                value={selectedExam.point ? selectedExam.point : ''}
-                                                onChange={e => {
-                                                    setSelectedExam({
-                                                        ...selectedExam,
-                                                        point: e.target.value
-                                                    });
-                                                }} />
+                                                value={value.point ? value.point : ''}
+                                                onChange={e => changePoint(e.target.value, index)} />
                                         ) : (value.point)}
                                     </td>
-                                    {roomRes.data && (roomRes.data.teacher.id === payload.id &&
+                                    {/* {roomRes.data && (roomRes.data.teacher.id === payload.id &&
                                         (!roomRes.data.confirms ||
                                             (roomRes.data.confirms && roomRes.data.confirms[0].status === "CANCELED") ||
                                             (roomRes.data.confirms && roomRes.data.confirms[0].status.includes("REJECTED"))
@@ -188,7 +206,7 @@ export function ListExam() {
                                                 </Link>
                                             </td>
                                         )
-                                    }
+                                    } */}
                                 </tr>
                             ))}
                         </tbody>
