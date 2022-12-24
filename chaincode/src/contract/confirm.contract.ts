@@ -154,7 +154,7 @@ export class ConfirmContract extends BaseContract {
                 actorId: this.currentPayload.id,
                 actorType: "TEACHER",
                 action: "INITIALIZE",
-                censorId:censorId
+                censorId: censorId
             }
 
             const confirm: Confirm = {
@@ -207,6 +207,7 @@ export class ConfirmContract extends BaseContract {
                 }
                 // check point is confirmed here
                 confirm.censorId1 = null;
+                action.censorId = null;
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType

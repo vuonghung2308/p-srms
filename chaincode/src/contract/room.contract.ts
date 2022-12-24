@@ -7,6 +7,7 @@ import { failed, success } from "../ledger/response";
 import { Teacher } from "../vo/teacher";
 import { Subject } from "../vo/subject";
 import { Confirm } from "../vo/confirm";
+import { Employee } from "../vo/employee";
 
 
 @Info({ title: 'RoomContract', description: 'Smart contract for Room' })
@@ -81,24 +82,17 @@ export class RoomContract extends BaseContract {
         }
         const [room, confirm]: [Room, Confirm] = await Promise.all([
             ledger.getState(ctx, roomId, "ROOM"),
-            ledger.getFirstState(ctx, "CONFIRM",
-                async (record: Confirm) => {
-                    return record.objectId === roomId
-                }
-            )
+            this.getConfirm(ctx, roomId)
         ]);
         if (room) {
-            let confirmId: string = null;
-            if (confirm) confirmId = confirm.id;
-            const [teacher, subject, confirms]: [Teacher, Subject, Confirm[]]
+            const [teacher, subject]: [Teacher, Subject]
                 = await Promise.all([
                     ledger.getState(ctx, room.teacherId, "TEACHER"),
                     ledger.getState(ctx, room.subjectId, "SUBJECT"),
-                    this.getConfirms(ctx, confirmId)
                 ]);
             delete room.teacherId; room['teacher'] = teacher;
             delete room.subjectId; room['subject'] = subject;
-            if (confirms.length !== 0) room['confirms'] = confirms;
+            room['confirm'] = confirm;
             switch (this.currentPayload.type) {
                 case "TEACHER": {
                     if (teacher.id === this.currentPayload.id) {
@@ -197,6 +191,38 @@ export class RoomContract extends BaseContract {
         const result = `${roomName}.${date.getFullYear()}.${date.getMonth()}` +
             `.${date.getDate()}.${date.getHours()}.${date.getMinutes()}`;
         return result;
+    }
+
+    private async getConfirm(
+        ctx: Context, roomId: string
+    ): Promise<Confirm> {
+
+        const confirm: Confirm = await ledger.getFirstState(
+            ctx, "CONFIRM", async (record: Confirm) => {
+                return record.objectId === roomId
+            }
+        )
+
+        if (confirm) {
+            confirm.actions.sort((a, b) => b.time - a.time)
+            for (const action of confirm.actions) {
+                if (action.actorType === "TEACHER") {
+                    const t: Teacher = await ledger.getState(
+                        ctx, action.actorId,
+                        action.actorType
+                    );
+                    action["actorName"] = t.name;
+                } else {
+                    const e: Employee = await ledger.getState(
+                        ctx, action.actorId,
+                        action.actorType
+                    );
+                    action["actorName"] = e.name;
+                }
+            }
+            return confirm;
+        }
+        return undefined;
     }
 
     private async getConfirms(

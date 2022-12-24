@@ -30,8 +30,8 @@ export function ListExam() {
             );
             getRoom(roomId).then(res => {
                 setRoomRes(res)
-                if (res.data.confirms) {
-                    confirmId.current = res.data.confirms[0].id;
+                if (res.data.confirm) {
+                    confirmId.current = res.data.confirm.id;
                 }
             });
         }
@@ -62,14 +62,11 @@ export function ListExam() {
     }
 
     const handleCancelation = (data) => {
-        const confirms = roomRes.data.confirms;
         setRoomRes({
             ...roomRes,
             data: {
                 ...roomRes.data,
-                confirms: [
-                    data, ...confirms
-                ]
+                confirm: data
             }
         });
         setTimeout(() => {
@@ -79,26 +76,13 @@ export function ListExam() {
     }
 
     const handleCreation = (data) => {
-        const confirms = roomRes.data.confirms;
-        if (!confirms) {
-            setRoomRes({
-                ...roomRes,
-                data: {
-                    ...roomRes.data,
-                    confirms: [data]
-                }
-            })
-        } else {
-            setRoomRes({
-                ...roomRes,
-                data: {
-                    ...roomRes.data,
-                    confirms: [
-                        data, ...confirms
-                    ]
-                }
-            });
-        }
+        setRoomRes({
+            ...roomRes,
+            data: {
+                ...roomRes.data,
+                confirm: data
+            }
+        });
         setTimeout(() => {
             alert("Lưu yêu cầu thành công!")
         }, 200);
@@ -116,9 +100,9 @@ export function ListExam() {
                     <div className="my-3 flex">
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thi</p>
 
-                        {roomRes.data && (!roomRes.data.confirms ||
-                            roomRes.data.confirms[0].status === "CANCELED" ||
-                            roomRes.data.confirms[0].status === "E_REJECTED"
+                        {roomRes.data && (!roomRes.data.confirm ||
+                            roomRes.data.confirm.status === "CANCELED" ||
+                            roomRes.data.confirm.status === "E_REJECTED"
                         ) && (
                                 <>
                                     <button className="w-[106px] ml-4 mr-4 flex border text-sm hover:border-red-normal px-3 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
@@ -146,7 +130,7 @@ export function ListExam() {
                                 </>
                             )
                         }
-                        {roomRes.data && (roomRes.data.confirms && roomRes.data.confirms[0].status === "INITIALIZED") && (
+                        {roomRes.data?.confirm?.status === "INITIALIZED" && (
                             <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                 onClick={cancelationToggle} >
                                 <i className="my-auto text-xs fa-solid fa-ban" />
@@ -163,12 +147,6 @@ export function ListExam() {
                                 <th className="border-4 border-white">Mã sinh viên</th>
                                 <th className="border-4 border-white">Họ và tên</th>
                                 <th className="border-4 border-white w-[100px]">Điểm</th>
-                                {/* {roomRes.data && (roomRes.data.teacher.id === payload.id &&
-                                    (!roomRes.data.confirms ||
-                                        (roomRes.data.confirms && roomRes.data.confirms[0].status === "CANCELED") ||
-                                        (roomRes.data.confirms && roomRes.data.confirms[0].status.includes("REJECTED"))
-                                    )
-                                ) && (<th className="border-4 border-white w-[100px]"></th>)} */}
                             </tr>
                         </thead>
                         <tbody>
@@ -186,39 +164,13 @@ export function ListExam() {
                                                 onChange={e => changePoint(e.target.value, index)} />
                                         ) : (value.point)}
                                     </td>
-                                    {/* {roomRes.data && (roomRes.data.teacher.id === payload.id &&
-                                        (!roomRes.data.confirms ||
-                                            (roomRes.data.confirms && roomRes.data.confirms[0].status === "CANCELED") ||
-                                            (roomRes.data.confirms && roomRes.data.confirms[0].status.includes("REJECTED"))
-                                        )
-                                    ) && (
-                                            <td >
-                                                <Link className="text-center mx-auto w-[60px] flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
-                                                    onClick={() => handleSelectedExam(value)}>
-                                                    {isEditing && value.code === selectedExam.code ? (
-                                                        <i className="text-xs fa-solid fa-floppy-disk my-auto"></i>
-                                                    ) : (
-                                                        <i className="text-xs fa-solid fa-pen-to-square my-auto"></i>
-                                                    )}
-                                                    <p className="ml-1.5 h-fit">
-                                                        {isEditing && value.code === selectedExam.code ? "Lưu" : "Sửa"}
-                                                    </p>
-                                                </Link>
-                                            </td>
-                                        )
-                                    } */}
                                 </tr>
                             ))}
                         </tbody>
                     </table>
-                    {roomRes.data && roomRes.data.confirms && (
-                        roomRes.data.confirms.map((confirm, index) => (
-                            <Confirm
-                                confirm={confirm}
-                                teacher={roomRes.data.teacher}
-                                key={confirm.id + index} />
-                        ))
-                    )}
+                    {roomRes.data?.confirm?.actions.map((action, index) => (
+                        <Action action={action} key={index} />
+                    ))}
                     <CreateConfirm
                         toggle={creationToggle}
                         isShowing={isCreationShowing}
@@ -234,44 +186,36 @@ export function ListExam() {
     );
 }
 
-const Confirm = ({ teacher, confirm }) => {
+const Action = ({ action }) => {
     return (
         <div className="mx-4 mt-4">
             <div className="flex">
-                {confirm.status === "INITIALIZED" && (
+                {action.action === "INITIALIZE" && (
                     <p className="text font-semibold text-gray-500">Nộp bảng điểm thi</p>
                 )}
-                {confirm.status === "CANCELED" && (
+                {action.action === "CANCEL" && (
                     <p className="text font-semibold text-gray-500">Hủy nộp bảng điểm thi</p>
                 )}
-                {confirm.status === "DONE" && (
+                {action.action === "DONE" && (
                     <p className="text font-semibold text-gray-500">Đã duyệt bảng điểm</p>
                 )}
-                {confirm.status.includes("REJECTED") && (
+                {action.action.includes("REJECT") && (
                     <p className="text font-semibold text-gray-500">Đã từ chối bảng điểm</p>
                 )}
 
                 <div className="ml-auto my-auto flex text-sm rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
                     <i className="text-xs my-auto mr-2 fa-regular fa-clock" />
-                    <p>{strTime(confirm.time)}</p>
+                    <p>{strTime(action.time)}</p>
                 </div>
             </div>
             <div className="flex mt-2">
                 <div className="flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-600">
                     <i className="text-xs my-auto fa-solid fa-user mr-2" />
-                    {(confirm.status === "INITIALIZED" || confirm.status === "CANCELED") && (
-                        <p>{teacher.name} ({teacher.id})</p>
-                    )}
-                    {confirm.status === "DONE" && (
-                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
-                    )}
-                    {confirm.status === "E_REJECTED" && (
-                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
-                    )}
+                    <p>{action.actorName} ({action.actorId})</p>
                 </div>
                 <div className="ml-4 flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
                     <i className="text-xs my-auto mr-2 fa-regular fa-note-sticky"></i>
-                    <p>{confirm.note}</p>
+                    <p>{action.note}</p>
                 </div>
             </div>
             <div className=" mt-4 rounded-lg bg-[#f2f3f5] w-full h-[2px]" />

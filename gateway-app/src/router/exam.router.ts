@@ -52,10 +52,8 @@ examRouter.post(
                 contract, 'Exam:SetPoint',
                 token, examCode, point
             );
-            console.log(result);
             return handleTransactionRes(res, result);
         } catch (err) {
-            console.log(err);
             return handleUnknownError(res, err);
         }
     }
