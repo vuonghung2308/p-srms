@@ -81,19 +81,15 @@ export function ListExam() {
                 <div className="mt-3">
                     <p className="font-semibold mb-1 text-xl text-gray-600">Chi tiết phòng thi</p>
                     <div>
-                        <p className="inline">Mã phòng thi: {roomRes.data.id}</p>
-                        <p className="inline ml-4">Mã môn học: {roomRes.data.subject.id}</p>
-                        <p className="inline ml-4">Tên môn học: {roomRes.data.subject.name}</p>
+                        <p className="inline">Phòng thi: {roomRes.data.roomName}</p>
+                        <p className="inline ml-4">Môn học: {roomRes.data.subject.name} ({roomRes.data.subject.id})</p>
                     </div>
                     <div>
-                        <p className="inline">Học kỳ: {roomRes.data.semester}</p>
-                        <p className="inline ml-4">Năm học: {roomRes.data.year}-{roomRes.data.year + 1}</p>
-                        <p className="inline ml-4">Mã giáo viên: {roomRes.data.teacher.id}</p>
-                        <p className="inline ml-4">Tên giáo viên: {roomRes.data.teacher.name}</p>
+                        <p className="inline">Học kỳ: {roomRes.data.semester} năm {roomRes.data.year}-{roomRes.data.year + 1}</p>
+                        <p className="inline ml-4">Giáo viên:  {roomRes.data.teacher.name} ({roomRes.data.teacher.id})</p>
                     </div>
                     <div>
-                        <p className="inline">Thời gian bắt đầu: {new Date(roomRes.data.timeStart * 1000).toLocaleString()}</p>
-                        <p className="inline ml-4">Thời gian làm bài: {roomRes.data.duration} phút</p>
+                        <p className="inline">Thời gian: {new Date(roomRes.data.timeStart * 1000).toLocaleString()} ({roomRes.data.duration} phút)</p>
                     </div>
                 </div>
             )}
