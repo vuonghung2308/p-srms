@@ -9,6 +9,8 @@ import { Confirm } from "../vo/confirm";
 import { Exam } from "../vo/exam";
 import { Student } from "../vo/student";
 import logger from "../utils/logger";
+import { Teacher } from "../vo/teacher";
+import { Employee } from "../vo/employee";
 
 
 @Info({ title: 'ClassContract', description: 'Smart contract for Class' })
@@ -71,9 +73,11 @@ export class ClassContract extends BaseContract {
                                 return c.objectId === record.id
                             }
                         )
+                        const isCensor = (confirm: Confirm) => confirm.actions.some(a =>
+                            a.censorId === this.currentPayload.id
+                        )
                         if (record.teacherId === this.currentPayload.id ||
-                            (confirm && confirm.censorId1 === this.currentPayload.id &&
-                                confirm.status !== "CANCELED")
+                            confirm && isCensor(confirm)
                         ) {
                             const values = await Promise.all([
                                 ledger.getState(ctx, record.subjectId, "SUBJECT"),
@@ -111,21 +115,14 @@ export class ClassContract extends BaseContract {
         }
         const [cls, confirm]: [Class, Confirm] = await Promise.all([
             ledger.getState(ctx, classId, "CLASS"),
-            ledger.getFirstState(ctx, "CONFIRM",
-                async (record: Confirm) => {
-                    return record.objectId === classId
-                }
-            )
+            this.getConfirm(ctx, classId)
         ]);
         if (cls) {
-            let confirmId = null;
-            if (confirm) confirmId = confirm.id;
-            const [subject, teacher, confirms] = await Promise.all([
+            const [subject, teacher] = await Promise.all([
                 ledger.getState(ctx, cls.subjectId, "SUBJECT"),
                 ledger.getState(ctx, cls.teacherId, "TEACHER"),
-                this.getConfirms(ctx, confirmId)
             ]);
-            if (confirms.length !== 0) cls['confirms'] = confirms;
+            cls["confirm"] = confirm;
             delete cls.subjectId; cls["subject"] = subject;
             delete cls.teacherId; cls["teacher"] = teacher;
             switch (this.currentPayload.type) {
@@ -367,41 +364,42 @@ export class ClassContract extends BaseContract {
         return success({ ...point, student });
     }
 
-    private async getConfirms(
-        ctx: Context, confirmId: string
-    ): Promise<Confirm[]> {
-        const confirms = [];
-        const censors = {};
-        if (!confirmId) return confirms;
-        const history: [] = await ledger.getHistory(
-            ctx, `CONFIRM.${confirmId}`
-        );
-        for (const item of history) {
-            const value: Confirm = item['value'];
-            if (!censors[value.censorId1]) {
-                const censor = await ledger.getState(
-                    ctx, value.censorId1, "TEACHER"
-                );
-                censors[value.censorId1] = censor;
+    private async getConfirm(
+        ctx: Context, classId: string
+    ): Promise<Confirm> {
+
+        const confirm: Confirm = await ledger.getFirstState(
+            ctx, "CONFIRM", async (record: Confirm) => {
+                return record.objectId === classId
             }
-            if (!censors[value.censorId2]) {
-                const censor = await ledger.getState(
-                    ctx, value.censorId2, "EMPLOYEE"
-                );
-                censors[value.censorId2] = censor;
+        )
+
+        if (confirm) {
+            confirm.actions.sort((a, b) => b.time - a.time)
+            for (const action of confirm.actions) {
+                if (action.censorId) {
+                    const t: Teacher = await ledger.getState(
+                        ctx, action.censorId,
+                        action.actorType
+                    );
+                    action["censorName"] = t.name;
+                }
+                if (action.actorType === "TEACHER") {
+                    const t: Teacher = await ledger.getState(
+                        ctx, action.actorId,
+                        action.actorType
+                    );
+                    action["actorName"] = t.name;
+                } else {
+                    const e: Employee = await ledger.getState(
+                        ctx, action.actorId,
+                        action.actorType
+                    );
+                    action["actorName"] = e.name;
+                }
             }
-            const censor1 = censors[value.censorId1];
-            const censor2 = censors[value.censorId2];
-            delete value.censorId1; delete value.censorId2;
-            delete value.docType;
-            const time = item['timestamp']['seconds'] / 1
-                + item['timestamp']['nanos'] / 1000000000;
-            confirms.push({
-                ...value, censor1, censor2,
-                time: Number(time)
-            });
+            return confirm;
         }
-        confirms.sort((a, b) => b.time - a.time)
-        return confirms;
+        return undefined;
     }
 }

@@ -4,7 +4,7 @@ import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { failed, success } from "../ledger/response";
 import { Class } from "../vo/class";
-import { Confirm } from "../vo/confirm";
+import { Confirm, ConfirmAction } from "../vo/confirm";
 import { Room } from "../vo/room";
 import { Teacher } from "../vo/teacher";
 import { Employee } from "../vo/employee";
@@ -42,7 +42,7 @@ export class ConfirmContract extends BaseContract {
                 confirms = await ledger.getStates(
                     ctx, "CONFIRM", async (record: Confirm) => {
                         return record.censorId1 === this.currentPayload.id ||
-                            record.teacherId === this.currentPayload.id
+                            record.requestor === this.currentPayload.id
                     }
                 );
                 break;
@@ -88,7 +88,7 @@ export class ConfirmContract extends BaseContract {
                     return success(confirm);
                 }
                 case "TEACHER": {
-                    if (confirm.teacherId === this.currentPayload.id ||
+                    if (confirm.requestor === this.currentPayload.id ||
                         confirm.censorId1 === this.currentPayload.id
                     ) {
                         return success(confirm);
@@ -132,12 +132,13 @@ export class ConfirmContract extends BaseContract {
         }
 
         if (type === "COMPONENTS_POINT" || type === "EXAM_POINT") {
-            const [currentConfirm, confirms, censor1] = await Promise.all([
-                ledger.getFirstState(ctx, "CONFIRM", async (record) => {
-                    return record.objectId === id
-                }), ledger.getStates(ctx, "CONFIRM"),
-                ledger.getState(ctx, censorId, "TEACHER")
-            ]);
+            const [currentConfirm, confirms, censor1]:
+                [Confirm, Confirm[], Teacher] = await Promise.all([
+                    ledger.getFirstState(ctx, "CONFIRM", async (record) => {
+                        return record.objectId === id
+                    }), ledger.getStates(ctx, "CONFIRM"),
+                    ledger.getState(ctx, censorId, "TEACHER")
+                ]);
 
             if (currentConfirm && currentConfirm.status !== "CANCELED" &&
                 !currentConfirm.status.includes("REJECTED")
@@ -148,15 +149,26 @@ export class ConfirmContract extends BaseContract {
                 });
             }
 
+            const action: ConfirmAction = {
+                time: time, note: note,
+                actorId: this.currentPayload.id,
+                actorType: "TEACHER",
+                action: "INITIALIZE",
+                censorId:censorId
+            }
+
             const confirm: Confirm = {
                 id: `${confirms.length}.${id}`,
-                type, note, status: "INITIALIZED",
+                type, status: "INITIALIZED",
                 docType: "CONFIRM", objectId: id,
                 censorId1: censorId, censorId2: null,
-                teacherId: this.currentPayload.id
+                requestor: this.currentPayload.id,
+                actions: [action]
             }
 
             if (currentConfirm) {
+                const cActions = currentConfirm.actions;
+                confirm.actions = [...cActions, action]
                 confirm.id = currentConfirm.id;
             }
 
@@ -202,8 +214,8 @@ export class ConfirmContract extends BaseContract {
             }
 
             delete confirm.docType;
-            confirm['time'] = time;
-            return success(confirm);
+            const newConfirm = await this.getActionData(ctx, confirm);
+            return success(newConfirm);
         } else {
             return failed({
                 code: 'NOT_ALLOWED', param: 'type',
@@ -243,10 +255,17 @@ export class ConfirmContract extends BaseContract {
                 ledger.getState(ctx, confirm.objectId, "ROOM"),
                 ledger.getState(ctx, confirm.censorId1, "TEACHER"),
             ]);
+        const action: ConfirmAction = {
+            time: time, note: note,
+            actorId: this.currentPayload.id,
+            actorType: "TEACHER",
+            action: "CANCEL",
+        };
         if (confirm.type === "COMPONENTS_POINT") {
             if (cls !== null && cls.teacherId === this.currentPayload.id) {
-                confirm.status = "CANCELED"; confirm.note = note;
+                confirm.status = "CANCELED";
                 confirm.docType = "CONFIRM";
+                confirm.actions.push(action);
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
@@ -254,8 +273,8 @@ export class ConfirmContract extends BaseContract {
                 delete confirm.docType;
                 delete confirm.censorId1;
                 confirm['censor1'] = censor1;
-                confirm['time'] = time;
-                return success(confirm);
+                const newConfirm = await this.getActionData(ctx, confirm);
+                return success(newConfirm);
             } else {
                 return failed({
                     code: 'NOT_ALLOWED', param: 'token',
@@ -264,15 +283,16 @@ export class ConfirmContract extends BaseContract {
             }
         } else {
             if (room !== null && room.teacherId === this.currentPayload.id) {
-                confirm.status = "CANCELED"; confirm.note = note;
+                confirm.status = "CANCELED";
                 confirm.docType = "CONFIRM";
+                confirm.actions.push(action);
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
                 delete confirm.docType;
-                confirm['time'] = time;
-                return success(confirm);
+                const newConfirm = await this.getActionData(ctx, confirm);
+                return success(newConfirm);
             } else {
                 return failed({
                     code: 'NOT_ALLOWED', param: 'token',
@@ -317,9 +337,16 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                confirm.status = "ACCEPTED"; confirm.note = note;
+                const action: ConfirmAction = {
+                    time: time, note: note,
+                    actorId: this.currentPayload.id,
+                    actorType: "TEACHER",
+                    action: "ACCEPT",
+                }
+                confirm.status = "ACCEPTED";
                 confirm.docType = "CONFIRM"; let censor2 = null;
                 if (this.currentPayload.type === "EMPLOYEE") {
+                    action.actorType = "EMPLOYEE";
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
                             code: "NOT_ALLOWED", param: 'id',
@@ -334,6 +361,7 @@ export class ConfirmContract extends BaseContract {
                 const censor1 = await ledger.getState(
                     ctx, confirm.censorId1, "TEACHER"
                 );
+                confirm.actions.push(action);
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
@@ -341,12 +369,12 @@ export class ConfirmContract extends BaseContract {
                 delete confirm.docType;
                 delete confirm.censorId1;
                 confirm["censor1"] = censor1;
-                confirm['time'] = time;
                 if (censor2) {
                     delete confirm.censorId2;
                     confirm["censor2"] = censor2;
                 }
-                return success(confirm);
+                const newConfirm = await this.getActionData(ctx, confirm);
+                return success(newConfirm);
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
@@ -374,6 +402,13 @@ export class ConfirmContract extends BaseContract {
             });
         }
 
+        const action: ConfirmAction = {
+            time: time, note: note,
+            actorId: this.currentPayload.id,
+            actorType: "TEACHER",
+            action: "REJECT",
+        }
+
         switch (this.currentPayload.type) {
             case "TEACHER": case "EMPLOYEE": {
                 const confirm: Confirm = await ledger.getState(
@@ -392,10 +427,11 @@ export class ConfirmContract extends BaseContract {
                     });
                 }
                 let censor2 = null; confirm.docType = "CONFIRM";
-                confirm.status = "T_REJECTED"; confirm.note = note;
+                confirm.status = "T_REJECTED";
                 if (this.currentPayload.type === "EMPLOYEE") {
                     confirm.censorId2 = this.currentPayload.id;
-                    confirm.status = "E_REJECTED"
+                    confirm.status = "E_REJECTED";
+                    action.actorType = "EMPLOYEE";
                     censor2 = await ledger.getState(
                         ctx, confirm.censorId2, "EMPLOYEE"
                     );
@@ -403,6 +439,7 @@ export class ConfirmContract extends BaseContract {
                 const censor1 = await ledger.getState(
                     ctx, confirm.censorId1, "TEACHER"
                 );
+                confirm.actions.push(action)
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
@@ -410,12 +447,12 @@ export class ConfirmContract extends BaseContract {
                 delete confirm.docType;
                 delete confirm.censorId1;
                 confirm["censor1"] = censor1;
-                confirm['time'] = time;
                 if (censor2) {
                     delete confirm.censorId2;
                     confirm["censor2"] = censor2;
                 }
-                return success(confirm);
+                const newConfirm = await this.getActionData(ctx, confirm);
+                return success(newConfirm);
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
@@ -443,6 +480,14 @@ export class ConfirmContract extends BaseContract {
             });
         }
 
+
+        const action: ConfirmAction = {
+            time: time, note: note,
+            actorId: this.currentPayload.id,
+            actorType: "EMPLOYEE",
+            action: "DONE",
+        }
+
         switch (this.currentPayload.type) {
             case "EMPLOYEE": {
                 const confirm: Confirm = await ledger.getState(
@@ -460,21 +505,23 @@ export class ConfirmContract extends BaseContract {
                         msg: "You do not have permission"
                     });
                 }
-                confirm.status = "DONE"; confirm.note = note;
+                confirm.status = "DONE";
                 confirm.censorId2 = this.currentPayload.id;
                 confirm.docType = "CONFIRM";
                 const [censor1, censor2]: [Teacher, Employee] = await Promise.all([
                     ledger.getState(ctx, confirm.censorId1, "TEACHER"),
                     ledger.getState(ctx, confirm.censorId2, "EMPLOYEE")
                 ]);
+                confirm.actions.push(action);
                 await ledger.putState(
                     ctx, this, confirm.id,
                     confirm, confirm.docType
                 )
-                delete confirm.docType; confirm['time'] = time;
+                delete confirm.docType;
                 delete confirm.censorId2; confirm["censor2"] = censor2;
                 delete confirm.censorId1; confirm["censor1"] = censor1;
-                return success(confirm);
+                const newConfirm = await this.getActionData(ctx, confirm);
+                return success(newConfirm);
             }
             case "TEACHER": case "STUDENT": case "ADMIN": default: {
                 return failed({
@@ -483,5 +530,34 @@ export class ConfirmContract extends BaseContract {
                 });
             }
         }
+    }
+
+    private async getActionData(
+        ctx: Context, confirm: Confirm
+    ): Promise<Confirm> {
+        confirm.actions.sort((a, b) => b.time - a.time)
+        for (const action of confirm.actions) {
+            if (action.censorId) {
+                const t: Teacher = await ledger.getState(
+                    ctx, action.censorId,
+                    action.actorType
+                );
+                action["censorName"] = t.name;
+            }
+            if (action.actorType === "TEACHER") {
+                const t: Teacher = await ledger.getState(
+                    ctx, action.actorId,
+                    action.actorType
+                );
+                action["actorName"] = t.name;
+            } else {
+                const e: Employee = await ledger.getState(
+                    ctx, action.actorId,
+                    action.actorType
+                );
+                action["actorName"] = e.name;
+            }
+        }
+        return confirm;
     }
 }

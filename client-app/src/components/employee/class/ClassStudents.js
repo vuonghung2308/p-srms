@@ -27,14 +27,11 @@ export function ClassStudents() {
     } = useModal();
 
     const handleAcceptanceConfirm = (data) => {
-        const confirms = classRes.data.confirms;
         setClassRes({
             ...classRes,
             data: {
                 ...classRes.data,
-                confirms: [
-                    data, ...confirms
-                ]
+                confirm: data
             }
         });
         setTimeout(() => {
@@ -44,14 +41,11 @@ export function ClassStudents() {
     }
 
     const handleRejectionConfirm = (data) => {
-        const confirms = classRes.data.confirms;
         setClassRes({
             ...classRes,
             data: {
                 ...classRes.data,
-                confirms: [
-                    data, ...confirms
-                ]
+                confirm: data
             }
         });
         setTimeout(() => {
@@ -68,8 +62,8 @@ export function ClassStudents() {
             );
             getClass(classId).then(res => {
                 setClassRes(res)
-                if (res.data.confirms) {
-                    confirmId.current = res.data.confirms[0].id
+                if (res.data.confirm) {
+                    confirmId.current = res.data.confirm.id
                 }
             });
         }
@@ -103,7 +97,7 @@ export function ClassStudents() {
                     <hr className="my-3" />
                     <div className="flex">
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thành phần</p>
-                        {classRes.data && classRes.data.confirms && classRes.data.confirms[0].status === "ACCEPTED" && (
+                        {classRes.data?.confirm?.status === "ACCEPTED" && (
                             <>
                                 <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                     onClick={rejectionToggle}>
@@ -148,14 +142,10 @@ export function ClassStudents() {
                             })}
                         </tbody>
                     </table>
-                    {classRes.data && classRes.data.confirms && (
-                        classRes.data.confirms.map((confirm, index) => (
-                            <Confirm
-                                confirm={confirm} teacher={classRes.data.teacher} key={confirm.id + index}
-                                isLast={index === classRes.data.confirms.length - 1}
-                                onAcceptClicked={acceptanceToggle} onRejectClicked={rejectionToggle} />
-                        ))
-                    )}
+                    {classRes.data?.confirm?.actions.map((action, index) => (
+                        <Action action={action} key={index} />
+                    ))
+                    }
                     <RejectConfirm
                         toggle={rejectionToggle}
                         isShowing={isRejectionShowing}
@@ -180,53 +170,39 @@ export function ClassStudents() {
     );
 }
 
-const Confirm = ({ teacher, confirm }) => {
+const Action = ({ action }) => {
     return (
         <div className="mx-4 mt-4">
             <div className="flex">
-                {confirm.status === "INITIALIZED" && (
+                {action.action === "INITIALIZE" && (
                     <div className="flex">
                         <p className="text font-semibold text-gray-500">Yêu cầu duyệt bảng điểm</p>
-                        <p className="ml-2 text-sm my-auto">tới: {confirm.censor1.name} ({confirm.censor1.id})</p>
+                        <p className="ml-2 text-sm my-auto">tới: {action.censorName} ({action.censorId})</p>
                     </div>
                 )}
-                {confirm.status === "CANCELED" && (
+                {action.action === "CANCEL" && (
                     <p className="text font-semibold text-gray-500">Hủy yêu cầu duyệt bảng điểm</p>
                 )}
-                {(confirm.status === "ACCEPTED" || confirm.status === "DONE") && (
+                {(action.action === "ACCEPT" || action.action === "DONE") && (
                     <p className="text font-semibold text-gray-500">Đã duyệt bảng điểm</p>
                 )}
-                {confirm.status.includes("REJECTED") && (
+                {action.action === "REJECT" && (
                     <p className="text font-semibold text-gray-500">Đã từ chối bảng điểm</p>
                 )}
 
                 <div className="ml-auto my-auto flex text-sm rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
                     <i className="text-xs my-auto mr-2 fa-regular fa-clock" />
-                    <p>{strTime(confirm.time)}</p>
+                    <p>{strTime(action.time)}</p>
                 </div>
             </div>
             <div className="flex mt-2">
                 <div className="flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-600">
                     <i className="text-xs my-auto fa-solid fa-user mr-2" />
-                    {(confirm.status === "INITIALIZED" || confirm.status === "CANCELED") && (
-                        <p>{teacher.name} ({teacher.id})</p>
-                    )}
-                    {confirm.status === "ACCEPTED" && (
-                        <p>{confirm.censor1.name} ({confirm.censor1.id})</p>
-                    )}
-                    {confirm.status === "DONE" && (
-                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
-                    )}
-                    {confirm.status === "E_REJECTED" && (
-                        <p>{confirm.censor2.name} ({confirm.censor2.id})</p>
-                    )}
-                    {confirm.status === "T_REJECTED" && (
-                        <p>{confirm.censor1.name} ({confirm.censor1.id})</p>
-                    )}
+                    <p>{action.actorName} ({action.actorId})</p>
                 </div>
                 <div className="ml-4 flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-500">
                     <i className="text-xs my-auto mr-2 fa-regular fa-note-sticky"></i>
-                    <p>{confirm.note}</p>
+                    <p>{action.note}</p>
                 </div>
             </div>
             <div className=" mt-4 rounded-lg bg-[#f2f3f5] w-full h-[2px]" />

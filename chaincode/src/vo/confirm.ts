@@ -9,7 +9,7 @@ export class Confirm {
     @Property()
     public objectId: string;
     @Property()
-    public teacherId: string;
+    public requestor: string;
     @Property()
     public censorId1: string;
     @Property()
@@ -18,6 +18,22 @@ export class Confirm {
     public type: string;
     @Property()
     public status: string;
+    @Property()
+    public actions: ConfirmAction[];
+}
+
+@Object()
+export class ConfirmAction {
+    @Property()
+    public time: number;
+    @Property()
+    public actorId: string;
+    @Property()
+    public actorType: string;
+    @Property()
+    public action: string;
+    @Property()
+    public censorId?: string;
     @Property()
     public note: string;
 }

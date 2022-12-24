@@ -183,7 +183,7 @@ export class PointContract extends BaseContract {
                 }
             );
             if (confirm) {
-                delete confirm.teacherId;
+                delete confirm.requestor;
                 delete confirm.censorId1;
                 delete confirm.objectId;
                 if (confirm.censorId2) {
@@ -210,7 +210,7 @@ export class PointContract extends BaseContract {
                 pConfirm['censor2'] = censor2;
             }
             delete pConfirm.objectId;
-            delete pConfirm.teacherId;
+            delete pConfirm.requestor;
             point['confirm'] = pConfirm;
         }
         delete point.classId; delete point.studentId;

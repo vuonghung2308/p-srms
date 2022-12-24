@@ -1,4 +1,4 @@
-import {  useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getExams, updatePoint } from "../../../api/exam";
 import { getRoom } from "../../../api/room";
@@ -111,7 +111,7 @@ export function ListExam() {
                 <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin phòng thi</p>
             </div>
             <hr />
-            {examsRes.status === "SUCCESS" && examsRes.data.length && (
+            {examsRes.status === "SUCCESS" && examsRes.data.length > 0 && (
                 <>
                     <div className="my-3 flex">
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thi</p>
