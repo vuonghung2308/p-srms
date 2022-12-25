@@ -11,11 +11,25 @@ export class Claim {
     @Property()
     public studentId: string;
     @Property()
-    public time: number;
-    @Property()
     public type: string;
     @Property()
     public status: string;
+    @Property()
+    public teacherId: string;
+    @Property()
+    public actions: ClaimAction[];
+}
+
+@Object()
+export class ClaimAction {
+    @Property()
+    public time: number;
+    @Property()
+    public actorId: string;
+    @Property()
+    public actorType: string;
+    @Property()
+    public action: string;
     @Property()
     public note: string;
 }

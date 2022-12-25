@@ -140,21 +140,11 @@ export class ConfirmContract extends BaseContract {
                     ledger.getState(ctx, censorId, "TEACHER")
                 ]);
 
-            if (currentConfirm && currentConfirm.status !== "CANCELED" &&
-                !currentConfirm.status.includes("REJECTED")
-            ) {
-                return failed({
-                    code: "EXISTED", param: 'id',
-                    msg: `The confirm for ${id} already exists`
-                });
-            }
-
             const action: ConfirmAction = {
                 time: time, note: note,
                 actorId: this.currentPayload.id,
-                actorType: "TEACHER",
-                action: "INITIALIZE",
-                censorId: censorId
+                actorType: this.currentPayload.type,
+                action: "INITIALIZE", censorId: censorId
             }
 
             const confirm: Confirm = {
@@ -166,7 +156,14 @@ export class ConfirmContract extends BaseContract {
                 actions: [action]
             }
 
-            if (currentConfirm) {
+            if (currentConfirm && currentConfirm.status !== "CANCELED" &&
+                !currentConfirm.status.includes("REJECTED")
+            ) {
+                return failed({
+                    code: "EXISTED", param: 'id',
+                    msg: `The confirm for ${id} already exists`
+                });
+            } else if (currentConfirm) {
                 const cActions = currentConfirm.actions;
                 confirm.actions = [...cActions, action]
                 confirm.id = currentConfirm.id;
@@ -257,10 +254,9 @@ export class ConfirmContract extends BaseContract {
                 ledger.getState(ctx, confirm.censorId1, "TEACHER"),
             ]);
         const action: ConfirmAction = {
-            time: time, note: note,
+            time: time, note: note, action: "CANCEL",
             actorId: this.currentPayload.id,
-            actorType: "TEACHER",
-            action: "CANCEL",
+            actorType: this.currentPayload.type,
         };
         if (confirm.type === "COMPONENTS_POINT") {
             if (cls !== null && cls.teacherId === this.currentPayload.id) {
@@ -339,15 +335,13 @@ export class ConfirmContract extends BaseContract {
                     });
                 }
                 const action: ConfirmAction = {
-                    time: time, note: note,
+                    time: time, note: note, action: "ACCEPT",
                     actorId: this.currentPayload.id,
-                    actorType: "TEACHER",
-                    action: "ACCEPT",
+                    actorType: this.currentPayload.type
                 }
                 confirm.status = "ACCEPTED";
                 confirm.docType = "CONFIRM"; let censor2 = null;
                 if (this.currentPayload.type === "EMPLOYEE") {
-                    action.actorType = "EMPLOYEE";
                     if (confirm.status !== "DONE" && confirm.type === "COMPONENTS_POINT") {
                         return failed({
                             code: "NOT_ALLOWED", param: 'id',
@@ -404,10 +398,9 @@ export class ConfirmContract extends BaseContract {
         }
 
         const action: ConfirmAction = {
-            time: time, note: note,
+            time: time, note: note, action: "REJECT",
             actorId: this.currentPayload.id,
-            actorType: "TEACHER",
-            action: "REJECT",
+            actorType: this.currentPayload.type
         }
 
         switch (this.currentPayload.type) {
@@ -432,7 +425,6 @@ export class ConfirmContract extends BaseContract {
                 if (this.currentPayload.type === "EMPLOYEE") {
                     confirm.censorId2 = this.currentPayload.id;
                     confirm.status = "E_REJECTED";
-                    action.actorType = "EMPLOYEE";
                     censor2 = await ledger.getState(
                         ctx, confirm.censorId2, "EMPLOYEE"
                     );
@@ -481,12 +473,10 @@ export class ConfirmContract extends BaseContract {
             });
         }
 
-
         const action: ConfirmAction = {
-            time: time, note: note,
+            time: time, note: note, action: "DONE",
             actorId: this.currentPayload.id,
-            actorType: "EMPLOYEE",
-            action: "DONE",
+            actorType: this.currentPayload.type
         }
 
         switch (this.currentPayload.type) {

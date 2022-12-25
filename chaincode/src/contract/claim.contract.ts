@@ -3,9 +3,14 @@ import { BaseContract } from "./contract";
 import * as jwt from "../auth/jwt";
 import * as ledger from "../ledger/common";
 import { failed, success } from "../ledger/response";
-import { Claim } from "../vo/claim";
+import { Claim, ClaimAction } from "../vo/claim";
 import { Point } from "../vo/point";
 import { Class } from "../vo/class";
+import { time } from "console";
+import { Room } from "../vo/room";
+import { Exam } from "../vo/exam";
+import { Teacher } from "../vo/teacher";
+import { Employee } from "../vo/employee";
 
 @Info({ title: 'ClaimContract', description: 'Smart contract for Claim' })
 export class ClaimContract extends BaseContract {
@@ -138,6 +143,7 @@ export class ClaimContract extends BaseContract {
         type: string, id: string,
         note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verifyStudent(token)
         );
@@ -150,33 +156,48 @@ export class ClaimContract extends BaseContract {
         }
 
         if (type === "COMPONENTS_POINT" || type === "EXAM_POINT") {
-            const currentClaims = await ledger.getStates(
+            const currentClaim: Claim = await ledger.getFirstState(
                 ctx, "CLAIM", async (record: Claim) => {
                     return record.objectId === id
                 }
             )
-            if (currentClaims.length === 1) {
+            const claims: Claim[] = await ledger
+                .getStates(ctx, "CLAIM");
+
+            const action: ClaimAction = {
+                time: time, note: note, action: "INITIALIZE",
+                actorId: this.currentPayload.id,
+                actorType: this.currentPayload.type
+            }
+            const claim: Claim = {
+                id: `${claims.length}.${id}`,
+                studentId: this.currentPayload.id,
+                type, status: "INITIALIZED",
+                docType: "CLAIM", objectId: id,
+                teacherId: null, actions: [action]
+            }
+
+            if (currentClaim && currentClaim.status !== "CANCELED"
+                && !currentClaim.status.includes("REJECTED")
+            ) {
                 return failed({
                     code: "EXISTED",
                     param: 'id',
                     msg: `The claim for ${id} already exists`
                 });
-            }
-
-            const claims: Claim[] = await ledger
-                .getStates(ctx, "CLAIM");
-            const claim: Claim = {
-                id: `${claims.length}.${id}`,
-                studentId: this.currentPayload.id,
-                time: (new Date().getTime() / 1000),
-                type, note, status: "INITIALIZED",
-                docType: "CLAIM", objectId: id
+            } else if (currentClaim) {
+                const cActions = currentClaim.actions;
+                claim.actions = [...cActions, action]
+                claim.id = currentClaim.id;
             }
 
             if (type === "COMPONENTS_POINT") {
                 const point: Point = await ledger.getState(
                     ctx, id, "POINT"
                 );
+                const cls: Class = await ledger.getState(
+                    ctx, point.classId, "CLASS"
+                )
                 if (point === null || point.studentId !== this.currentPayload.id) {
                     return failed({
                         code: 'NOT_ALLOWED', param: 'id',
@@ -184,13 +205,14 @@ export class ClaimContract extends BaseContract {
                     });
                 }
                 // check point is confirmed here
+                claim.teacherId = cls.teacherId;
                 await ledger.putState(
                     ctx, this, claim.id,
                     claim, claim.docType
                 )
             } else {
                 const [exam, points] = await Promise.all([
-                    ledger.getState(ctx, id, "EXAMP"),
+                    ledger.getState(ctx, id, "EXAM"),
                     ledger.getStates(
                         ctx, "POINT", async (record: Point) => {
                             return record.studentId === this.currentPayload.id &&
@@ -200,6 +222,10 @@ export class ClaimContract extends BaseContract {
                 ]);
                 // check exam is confirmed here
                 if (exam !== null && points.length == 1) {
+                    const room: Room = await ledger.getState(
+                        ctx, exam.teacherId, "TEACHER"
+                    );
+                    claim.teacherId = room.teacherId;
                     await ledger.putState(
                         ctx, this, claim.id,
                         claim, claim.docType
@@ -213,7 +239,8 @@ export class ClaimContract extends BaseContract {
             }
 
             delete claim.docType;
-            return success(claim);
+            const nClaim = await this.getActionData(ctx, claim);
+            return success(nClaim);
         } else {
             return failed({
                 code: 'NOT_ALLOWED', param: 'type',
@@ -227,6 +254,7 @@ export class ClaimContract extends BaseContract {
         ctx: Context, token: string,
         id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verifyStudent(token)
         );
@@ -237,19 +265,25 @@ export class ClaimContract extends BaseContract {
                 msg: status.msg
             });
         }
+        const action: ClaimAction = {
+            time: time, note: note, action: "CANCEL",
+            actorId: this.currentPayload.id,
+            actorType: this.currentPayload.type,
+        }
         const claim: Claim = await ledger.getState(
             ctx, id, "CLAIM"
         );
         if (claim && claim.studentId === this.currentPayload.id) {
-            claim.status = "CANCELED"; claim.note = note;
-            claim.time = new Date().getTime() / 1000;
+            claim.actions.push(action);
+            claim.status = "CANCELED";
             claim.docType = "CLAIM";
             await ledger.putState(
                 ctx, this, claim.id,
                 claim, claim.docType
             )
             delete claim.docType;
-            return success(claim);
+            const nClaim = await this.getActionData(ctx, claim);
+            return success(nClaim);
         } else {
             return failed({
                 code: 'NOT_ALLOWED', param: 'id',
@@ -260,8 +294,10 @@ export class ClaimContract extends BaseContract {
 
     @Transaction()
     public async Accept(
-        ctx: Context, token: string, id: string, note: string
+        ctx: Context, token: string,
+        id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verify(token)
         );
@@ -272,7 +308,11 @@ export class ClaimContract extends BaseContract {
                 msg: status.msg
             });
         }
-
+        const action: ClaimAction = {
+            time: time, note: note, action: "ACCEPT",
+            actorId: this.currentPayload.id,
+            actorType: this.currentPayload.type,
+        }
         switch (this.currentPayload.type) {
             case "TEACHER": case "EMPLOYEE": {
                 const claim: Claim = await ledger.getState(
@@ -284,27 +324,34 @@ export class ClaimContract extends BaseContract {
                         msg: `The claim ${id} is not valid.`
                     });
                 }
-                if (claim.type === "COMPONENTS_POINT" && this.currentPayload.type === "EMPLOYEE") {
-                    return failed({
-                        code: "NOT_ALLOWED", param: 'token',
-                        msg: "You do not have permission"
-                    });
+                if (claim.type === "COMPONENTS_POINT") {
+                    if (this.currentPayload.type === "EMPLOYEE" ||
+                        this.currentPayload.id !== claim.teacherId
+                    ) {
+                        return failed({
+                            code: "NOT_ALLOWED", param: 'token',
+                            msg: "You do not have permission"
+                        });
+                    }
                 }
-                if (claim.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
-                    return failed({
-                        code: "NOT_ALLOWED", param: 'token',
-                        msg: "You do not have permission"
-                    });
+                if (claim.type === "EXAM_POINT") {
+                    if (this.currentPayload.type !== "EMPLOYEE") {
+                        return failed({
+                            code: "NOT_ALLOWED", param: 'token',
+                            msg: "You do not have permission"
+                        });
+                    }
                 }
-                claim.status = "ACCEPTED"; claim.note = note;
-                claim.time = new Date().getTime() / 1000;
+                claim.actions.push(action);
+                claim.status = "ACCEPTED";
                 claim.docType = "CLAIM";
                 await ledger.putState(
                     ctx, this, claim.id,
                     claim, claim.docType
                 )
                 delete claim.docType;
-                return success(claim);
+                const nClaim = await this.getActionData(ctx, claim);
+                return success(nClaim);
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
@@ -320,6 +367,7 @@ export class ClaimContract extends BaseContract {
         ctx: Context, token: string,
         id: string, note: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verify(token)
         );
@@ -330,7 +378,11 @@ export class ClaimContract extends BaseContract {
                 msg: status.msg
             });
         }
-
+        const action: ClaimAction = {
+            time: time, note: note, action: "ACCEPT",
+            actorId: this.currentPayload.id,
+            actorType: this.currentPayload.type,
+        }
         switch (this.currentPayload.type) {
             case "TEACHER": case "EMPLOYEE": {
                 const claim: Claim = await ledger.getState(
@@ -343,30 +395,34 @@ export class ClaimContract extends BaseContract {
                         msg: `The claim ${id} is not valid.`
                     });
                 }
-                if (claim.type === "COMPONENTS_POINT" && this.currentPayload.type === "EMPLOYEE") {
-                    return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
-                        msg: "You do not have permission"
-                    });
+                if (claim.type === "COMPONENTS_POINT") {
+                    if (this.currentPayload.type === "EMPLOYEE" ||
+                        this.currentPayload.id !== claim.teacherId
+                    ) {
+                        return failed({
+                            code: "NOT_ALLOWED", param: 'token',
+                            msg: "You do not have permission"
+                        });
+                    }
                 }
-                if (claim.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
-                    return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
-                        msg: "You do not have permission"
-                    });
+                if (claim.type === "EXAM_POINT") {
+                    if (this.currentPayload.type !== "EMPLOYEE") {
+                        return failed({
+                            code: "NOT_ALLOWED", param: 'token',
+                            msg: "You do not have permission"
+                        });
+                    }
                 }
+                claim.actions.push(action);
                 claim.status = "REJECTED";
-                claim.time = new Date().getTime() / 1000;
-                claim.note = note;
                 claim.docType = "CLAIM";
                 await ledger.putState(
                     ctx, this, claim.id,
                     claim, claim.docType
                 )
                 delete claim.docType;
-                return success(claim);
+                const nClaim = await this.getActionData(ctx, claim);
+                return success(nClaim);
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
@@ -380,9 +436,11 @@ export class ClaimContract extends BaseContract {
 
     @Transaction()
     public async Done(
-        ctx: Context, token: string,
-        id: string, note: string
+        ctx: Context, token: string, id: string,
+        note: string, eaPoint: string, atPoint: string,
+        prPoint: string, miPoint: string, eePoint: string
     ): Promise<string> {
+        const time = new Date().getTime() / 1000;
         const status = this.setCurrentPayload(
             jwt.verify(token)
         );
@@ -392,6 +450,12 @@ export class ClaimContract extends BaseContract {
                 param: 'token',
                 msg: status.msg
             });
+        }
+
+        const action: ClaimAction = {
+            time: time, note: note, action: "ACCEPT",
+            actorId: this.currentPayload.id,
+            actorType: this.currentPayload.type,
         }
 
         switch (this.currentPayload.type) {
@@ -406,30 +470,55 @@ export class ClaimContract extends BaseContract {
                         msg: `The claim ${id} is not valid.`
                     });
                 }
-                if (claim.type === "COMPONENTS_POINT" && this.currentPayload.type === "EMPLOYEE") {
-                    return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
-                        msg: "You do not have permission"
-                    });
+                if (claim.type === "COMPONENTS_POINT") {
+                    if (this.currentPayload.type === "EMPLOYEE" ||
+                        this.currentPayload.id !== claim.teacherId
+                    ) {
+                        return failed({
+                            code: "NOT_ALLOWED", param: 'token',
+                            msg: "You do not have permission"
+                        });
+                    }
+                    const point: Point = await ledger.getState(
+                        ctx, claim.objectId, "POINT"
+                    )
+                    if (atPoint !== "undefined") {
+                        point.attendancePoint = Number(atPoint);
+                    } else point.attendancePoint = null;
+                    if (prPoint !== "undefined") {
+                        point.practicePoint = Number(prPoint);
+                    } else point.practicePoint = null;
+                    if (miPoint !== "undefined") {
+                        point.midtermExamPoint = Number(miPoint);
+                    } else point.midtermExamPoint = null;
+                    if (eePoint !== "undefined") {
+                        point.exercisePoint = Number(eePoint);
+                    } else point.exercisePoint = null;
                 }
-                if (claim.type === "EXAM_POINT" && this.currentPayload.type === "TEACHER") {
-                    return failed({
-                        code: "NOT_ALLOWED",
-                        param: 'token',
-                        msg: "You do not have permission"
-                    });
+                if (claim.type === "EXAM_POINT") {
+                    if (this.currentPayload.type !== "EMPLOYEE") {
+                        return failed({
+                            code: "NOT_ALLOWED", param: 'token',
+                            msg: "You do not have permission"
+                        });
+                    }
+                    const exam: Exam = await ledger.getState(
+                        ctx, claim.objectId, "EXAM"
+                    )
+                    if (eaPoint !== "undefined") {
+                        exam.point = Number(eaPoint);
+                    } else exam.point = null;
                 }
+                claim.actions.push(action);
                 claim.status = "DONE";
-                claim.time = new Date().getTime() / 1000;
-                claim.note = note;
                 claim.docType = "CLAIM";
                 await ledger.putState(
                     ctx, this, claim.id,
                     claim, claim.docType
                 )
                 delete claim.docType;
-                return success(claim);
+                const nClaim = await this.getActionData(ctx, claim);
+                return success(nClaim);
             }
             case "STUDENT": case "ADMIN": default: {
                 return failed({
@@ -439,5 +528,19 @@ export class ClaimContract extends BaseContract {
                 });
             }
         }
+    }
+
+    private async getActionData(
+        ctx: Context, claim: Claim
+    ): Promise<Claim> {
+        claim.actions.sort((a, b) => b.time - a.time)
+        for (const action of claim.actions) {
+            const actor = await ledger.getState(
+                ctx, action.actorId,
+                action.actorType
+            );
+            action["actorName"] = actor.name;
+        }
+        return claim;
     }
 }
