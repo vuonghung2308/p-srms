@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { PayloadContext } from "./common/token";
 import Login from "./components/common/Login";
@@ -24,6 +24,10 @@ import TransactionDetail from "./components/admin/transaction/TransactionDetail"
 import StateHistory from "./components/admin/transaction/StateHistory";
 import Backup from "./components/admin/backup/Backup";
 import PointDetail from "./components/student/points/PointDetail";
+import { ListClaim as TListClaim } from "./components/teacher/claim/ListClaim";
+import { ListClaim as SListClaim } from "./components/student/claim/ListClaim";
+import { ClaimDetail as TClaimDetail } from "./components/teacher/claim/ClaimDetail";
+import { ClaimDetail as SClaimDetail } from "./components/student/claim/ClaimDetail";
 
 export default function App() {
   const payload = useContext(PayloadContext);
@@ -42,6 +46,10 @@ export default function App() {
             <Route path="xem-diem" element={<Outlet />}>
               <Route index element={<StudentPoint />} />
               <Route path=":pointId" element={<PointDetail />} />
+            </Route>
+            <Route path="phuc-khao" element={<Outlet />}>
+              <Route index element={<SListClaim />} />
+              <Route path=":claimId" element={<SClaimDetail />} />
             </Route>
           </Route>
         </Routes>
@@ -88,6 +96,10 @@ export default function App() {
               <Route path=":roomId" element={<Outlet />}>
                 <Route index element={<TListExam />} />
               </Route>
+            </Route>
+            <Route path="phuc-khao" element={<Outlet />}>
+              <Route index element={<TListClaim />} />
+              <Route path=":claimId" element={<TClaimDetail />} />
             </Route>
           </Route>
         </Routes>

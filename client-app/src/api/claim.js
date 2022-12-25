@@ -12,12 +12,10 @@ export async function createClaim(
     });
 }
 
-export async function cancelClaim(
-    id, note
-) {
+export async function cancelClaim(claimId, note) {
     return send(`${baseUrl}/claim/cancel`, {
         body: JSON.stringify({
-            id, note
+            id: claimId, note
         }),
         method: 'POST',
     });
@@ -26,5 +24,29 @@ export async function cancelClaim(
 export async function getClaims() {
     return send(`${baseUrl}/claim/get-all`, {
         method: 'GET',
+    });
+}
+
+export async function getClaim(claimId) {
+    return send(`${baseUrl}/claim/${claimId}`, {
+        method: 'GET',
+    });
+}
+
+export async function acceptClaim(claimId, note) {
+    return send(`${baseUrl}/claim/accept`, {
+        body: JSON.stringify({
+            id: claimId, note
+        }),
+        method: 'POST',
+    });
+}
+
+export async function rejectClaim(claimId, note) {
+    return send(`${baseUrl}/claim/reject`, {
+        body: JSON.stringify({
+            id: claimId, note
+        }),
+        method: 'POST',
     });
 }

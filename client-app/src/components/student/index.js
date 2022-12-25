@@ -18,7 +18,8 @@ const Content = ({ className }) => {
                     to="xem-diem">
                     Xem điểm
                 </Link>
-                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4">
+                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
+                    to="phuc-khao">
                     Phúc khảo
                 </Link>
             </div>

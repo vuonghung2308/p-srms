@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getPoint } from "../../../api/point";
 import { strDate, strHour } from "../../../ultils/time";
 import useModal from "../../common/Modal/use";
-import CancelClaim from "./CancelClaim";
-import CreateClaim from "./CreateClaim";
+import CreateClaim from "../claim/CreateClaim";
 
 const PointDetail = () => {
     const { pointId } = useParams();
     const shouldFetch = useRef(true);
     const claimType = useRef(null);
-    const claimId = useRef(null);
     const objectId = useRef(null);
     const [pointRes, setPointRes] = useState(
         { status: "NONE", data: null }
@@ -18,11 +16,6 @@ const PointDetail = () => {
     const {
         isShowing: isCreationShowing,
         toggle: creationToggle
-    } = useModal();
-
-    const {
-        isShowing: isCancelationShowing,
-        toggle: cancelationToggle
     } = useModal();
 
     useEffect(() => {
@@ -34,17 +27,6 @@ const PointDetail = () => {
         }
     }, [pointId])
 
-    const cancelPointClaim = () => {
-        claimType.current = "COMPONENTS_POINT";
-        claimId.current = pointRes.data.point.claim.id;
-        cancelationToggle();
-    }
-
-    const cancelExamClaim = () => {
-        claimType.current = "EXAM_POINT";
-        claimId.current = pointRes.data.exam.claim.id;
-        cancelationToggle();
-    }
 
     const claimPoint = () => {
         claimType.current = "COMPONENTS_POINT";
@@ -85,10 +67,6 @@ const PointDetail = () => {
         setTimeout(() => {
             alert("Xử lý yêu cầu thành công!")
         }, 200);
-    }
-    const handleCancelationClaim = (data) => {
-        updateClaim(data);
-        cancelationToggle();
     }
 
     const handleCreationClaim = (data) => {
@@ -135,16 +113,15 @@ const PointDetail = () => {
                                                 <p className="ml-2 my-auto">Phúc khảo</p>
                                             </button>
                                         )}
-                                        {pointRes.data?.point?.claim?.status === "INITIALIZED" && (
-                                            <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
-                                                onClick={cancelPointClaim} >
-                                                <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
-                                                <p className="ml-2 my-auto">Hủy phúc khảo</p>
-                                            </button>
-                                        )}
                                     </>
                                 )
                             }
+                            {pointRes.data?.point?.claim && (
+                                <Link className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                    to={`/phuc-khao/${pointRes.data.point.claim.id}`} >
+                                    <p className="my-auto">Xem yêu cầu phúc khảo</p>
+                                </Link>
+                            )}
                         </div>
                         <table className="w-full">
                             <thead className="text-gray-600 font-semibold border-b">
@@ -214,16 +191,15 @@ const PointDetail = () => {
                                                     <p className="ml-2 my-auto">Phúc khảo</p>
                                                 </button>
                                             )}
-                                            {pointRes.data?.exam?.claim?.status === "INITIALIZED" && (
-                                                <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
-                                                    onClick={cancelExamClaim} >
-                                                    <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
-                                                    <p className="ml-2 my-auto">Hủy phúc khảo</p>
-                                                </button>
-                                            )}
                                         </>
                                     )
                                 }
+                                {pointRes.data?.exam?.claim && (
+                                    <Link className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                        to={`/phuc-khao/${pointRes.data.exam.claim.id}`} >
+                                        <p className="my-auto">Xem yêu cầu phúc khảo</p>
+                                    </Link>
+                                )}
                             </div>
 
                             <table className="w-full">
@@ -269,11 +245,6 @@ const PointDetail = () => {
                 claimType={claimType.current}
                 objectId={objectId.current}
                 onSuccess={handleCreationClaim} />
-            <CancelClaim
-                toggle={cancelationToggle}
-                isShowing={isCancelationShowing}
-                claimId={claimId.current}
-                onSuccess={handleCancelationClaim} />
         </>
     )
 }

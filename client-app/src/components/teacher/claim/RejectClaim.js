@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import ReactDOM from 'react-dom';
-import { cancelClaim } from "../../../api/claim";
+import { rejectClaim } from "../../../api/claim";
 
-export default function CancelClaim({
+export default function RejectClaim({
     isShowing, toggle, onSuccess, claimId
 }) {
     const [status, setStatus] = useState({ status: "NONE" });
@@ -27,7 +27,7 @@ export default function CancelClaim({
 
     const handleRequest = async () => {
         if (isNoteEmpty()) return;
-        cancelClaim(claimId, note).then(res => {
+        rejectClaim(claimId, note).then(res => {
             if (res.status === "SUCCESS") {
                 onSuccess(res.data);
             } else {
@@ -42,19 +42,15 @@ export default function CancelClaim({
                 <div className={`bg-[#fefefe] w-[400px] mx-auto py-4 px-6 border rounded-xl shadow-2xl`}>
                     <div className="my-4 mx-4">
                         <div className="flex">
-                            <p className="font-semibold text-xl text-gray-600">Hủy yêu cầu phúc khảo</p>
+                            <p className="font-semibold text-xl text-gray-600">Từ chối yêu cầu</p>
                             <button className="ml-auto h-6 w-6 hover:text-red-dark rounded-[50%] bg-gray-100"
                                 onClick={() => { toggle() }}>
                                 <i className="fa-solid fa-xmark" />
                             </button>
                         </div>
 
-
-
-
-                        <p className="mt-3">Chú thích</p>
-                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-1 resize-none"
-                            placeholder="Lý do phúc khảo" value={note} onChange={e => setNote(e.target.value)} />
+                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
+                            placeholder="Lý do từ chối" value={note} onChange={e => setNote(e.target.value)} />
                         {status.status === "FAILED" ? (
                             <p className="text-sm text-red-500 font-semibold mt-1 ml-1">
                                 {status.message}

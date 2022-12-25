@@ -8,6 +8,8 @@ import { Point } from "../vo/point";
 import { Class } from "../vo/class";
 import { Room } from "../vo/room";
 import { Exam } from "../vo/exam";
+import { Student } from "../vo/student";
+import { Subject } from "../vo/subject";
 
 @Info({ title: 'ClaimContract', description: 'Smart contract for Claim' })
 export class ClaimContract extends BaseContract {
@@ -32,7 +34,23 @@ export class ClaimContract extends BaseContract {
             case "STUDENT": {
                 claims = await ledger.getStates(
                     ctx, "CLAIM", async (record: Claim) => {
-                        return record.studentId === this.currentPayload.id
+                        if (record.type === "COMPONENTS_POINT") {
+                            const point: Point = await ledger.getState(
+                                ctx, record.objectId, "POINT"
+                            );
+                            const cls: Class = await ledger.getState(
+                                ctx, point.classId, "CLASS"
+                            );
+                            const [teacher, subject] = await Promise.all([
+                                ledger.getState(ctx, record.teacherId, "TEACHER"),
+                                ledger.getState(ctx, cls.subjectId, "SUBJECT")
+                            ])
+                            record['teacher'] = teacher;
+                            record['class'] = cls;
+                            cls['subject'] = subject;
+                            return record.studentId === this.currentPayload.id
+                        } else { return false; }
+
                     }
                 );
                 break;
@@ -55,6 +73,13 @@ export class ClaimContract extends BaseContract {
                             const cls: Class = await ledger.getState(
                                 ctx, point.classId, "CLASS"
                             );
+                            const [student, subject] = await Promise.all([
+                                ledger.getState(ctx, record.studentId, "STUDENT"),
+                                ledger.getState(ctx, cls.subjectId, "SUBJECT")
+                            ])
+                            record['student'] = student;
+                            record['class'] = cls;
+                            cls['subject'] = subject;
                             return cls.teacherId === this.currentPayload.id;
                         } else { return false; }
                     }
@@ -89,6 +114,27 @@ export class ClaimContract extends BaseContract {
             ctx, claimId, "CLAIM"
         );
         if (claim) {
+            const student: Student = await ledger.getState(
+                ctx, claim.studentId, "STUDENT"
+            );
+            if (claim.type === "COMPONENTS_POINT") {
+                var point: Point = await ledger.getState(
+                    ctx, claim.objectId, "POINT"
+                );
+                var cls: Class = await ledger.getState(
+                    ctx, point.classId, "CLASS"
+                );
+                var subject: Subject = await ledger.getState(
+                    ctx, cls.subjectId, "SUBJECT"
+                );
+                cls['subject'] = subject;
+                claim['student'] = student;
+                claim['class'] = cls;
+                claim['point'] = point;
+            }
+            const nClaim = await this.getActionData(
+                ctx, claim
+            );
             switch (this.currentPayload.type) {
                 case "STUDENT": {
                     if (claim.studentId === this.currentPayload.id) {
@@ -104,14 +150,8 @@ export class ClaimContract extends BaseContract {
                     return success(claim);
                 }
                 case "TEACHER": {
-                    const point: Point = await ledger.getState(
-                        ctx, claim.objectId, "POINT"
-                    );
-                    const cls: Class = await ledger.getState(
-                        ctx, point.classId, "CLASS"
-                    );
                     if (cls.teacherId === this.currentPayload.id) {
-                        return success(claim);
+                        return success(nClaim);
                     } else {
                         return failed({
                             code: "INVALID", param: 'claimId',
@@ -376,7 +416,7 @@ export class ClaimContract extends BaseContract {
             });
         }
         const action: ClaimAction = {
-            time: time, note: note, action: "ACCEPT",
+            time: time, note: note, action: "REJECT",
             actorId: this.currentPayload.id,
             actorType: this.currentPayload.type,
         }
