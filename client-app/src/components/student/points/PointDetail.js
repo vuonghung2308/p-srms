@@ -2,21 +2,100 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getPoint } from "../../../api/point";
 import { strDate, strHour } from "../../../ultils/time";
+import useModal from "../../common/Modal/use";
+import CancelClaim from "./CancelClaim";
+import CreateClaim from "./CreateClaim";
 
 const PointDetail = () => {
     const { pointId } = useParams();
     const shouldFetch = useRef(true);
+    const claimType = useRef(null);
+    const claimId = useRef(null);
+    const objectId = useRef(null);
     const [pointRes, setPointRes] = useState(
         { status: "NONE", data: null }
     );
+    const {
+        isShowing: isCreationShowing,
+        toggle: creationToggle
+    } = useModal();
+
+    const {
+        isShowing: isCancelationShowing,
+        toggle: cancelationToggle
+    } = useModal();
+
     useEffect(() => {
-        if (shouldFetch) {
+        if (shouldFetch.current) {
             shouldFetch.current = false;
-            getPoint(pointId).then(
-                res => setPointRes(res)
-            )
+            getPoint(pointId).then(res => {
+                setPointRes(res);
+            })
         }
     }, [pointId])
+
+    const cancelPointClaim = () => {
+        claimType.current = "COMPONENTS_POINT";
+        claimId.current = pointRes.data.point.claim.id;
+        cancelationToggle();
+    }
+
+    const cancelExamClaim = () => {
+        claimType.current = "EXAM_POINT";
+        claimId.current = pointRes.data.exam.claim.id;
+        cancelationToggle();
+    }
+
+    const claimPoint = () => {
+        claimType.current = "COMPONENTS_POINT";
+        objectId.current = pointId;
+        creationToggle();
+    }
+    const claimExam = () => {
+        const examId = pointRes.data.exam.id;
+        claimType.current = "EXAM_POINT";
+        objectId.current = examId;
+        creationToggle();
+    }
+
+    const updateClaim = (data) => {
+        if (claimType.current === "EXAM_POINT") {
+            setPointRes({
+                ...pointRes,
+                data: {
+                    ...pointRes.data,
+                    exam: {
+                        ...pointRes.data.exam,
+                        claim: data
+                    }
+                }
+            });
+        } else {
+            setPointRes({
+                ...pointRes,
+                data: {
+                    ...pointRes.data,
+                    point: {
+                        ...pointRes.data.point,
+                        claim: data
+                    }
+                }
+            });
+        }
+        setTimeout(() => {
+            alert("Xử lý yêu cầu thành công!")
+        }, 200);
+    }
+    const handleCancelationClaim = (data) => {
+        updateClaim(data);
+        cancelationToggle();
+    }
+
+    const handleCreationClaim = (data) => {
+        updateClaim(data);
+        creationToggle();
+    }
+
     return (
         <>
             <div className="py-4">
@@ -44,15 +123,26 @@ const PointDetail = () => {
                         <hr />
                         <div className="flex mt-4 mb-3">
                             <p className="font-semibold text-xl text-gray-600">Điểm thành phần</p>
-                            {(!pointRes.data.points.confirm || (
-                                pointRes.data.points.confirm.status !== "ACCEPTED" &&
-                                pointRes.data.points.confirm.status !== "DONE"
+                            {(!pointRes.data.point.confirm || (
+                                pointRes.data.point.confirm.status !== "ACCEPTED" &&
+                                pointRes.data.point.confirm.status !== "DONE"
                             )) && (
-                                    <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
-                                        onClick={() => { }} >
-                                        <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
-                                        <p className="ml-2 my-auto">Phúc khảo</p>
-                                    </button>
+                                    <>
+                                        {(!pointRes.data.point.claim || pointRes.data?.point?.claim?.status === "CANCELED") && (
+                                            <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                                onClick={claimPoint} >
+                                                <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
+                                                <p className="ml-2 my-auto">Phúc khảo</p>
+                                            </button>
+                                        )}
+                                        {pointRes.data?.point?.claim?.status === "INITIALIZED" && (
+                                            <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                                onClick={cancelPointClaim} >
+                                                <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
+                                                <p className="ml-2 my-auto">Hủy phúc khảo</p>
+                                            </button>
+                                        )}
+                                    </>
                                 )
                             }
                         </div>
@@ -78,30 +168,30 @@ const PointDetail = () => {
                                     <td className="text-center pt-1.5">{pointRes.data.class.subject.midtermExamPointRate}</td>
                                     <td className="text-center pt-1.5">{pointRes.data.class.subject.finalExamPointRate}</td>
 
-                                    <td className="text-center pt-1.5">{pointRes.data.points.attendancePoint}</td>
-                                    <td className="text-center pt-1.5">{pointRes.data.points.practicePoint}</td>
-                                    <td className="text-center pt-1.5">{pointRes.data.points.exercisePoint}</td>
-                                    <td className="text-center pt-1.5">{pointRes.data.points.midtermExamPoint}</td>
+                                    <td className="text-center pt-1.5">{pointRes.data.point.attendancePoint}</td>
+                                    <td className="text-center pt-1.5">{pointRes.data.point.practicePoint}</td>
+                                    <td className="text-center pt-1.5">{pointRes.data.point.exercisePoint}</td>
+                                    <td className="text-center pt-1.5">{pointRes.data.point.midtermExamPoint}</td>
                                 </tr>
                             </tbody>
                         </table>
-                        {pointRes.data.points.confirm && (
+                        {pointRes.data.point.confirm && (
                             <div className="mt-2 flex">
                                 {(
-                                    pointRes.data.points.confirm.status !== "INITIALIZED" ||
-                                    pointRes.data.points.confirm.status !== "CANCELED" ||
-                                    !pointRes.data.points.confirm.status.includes("REJECTED")
+                                    pointRes.data.point.confirm.status !== "INITIALIZED" ||
+                                    pointRes.data.point.confirm.status !== "CANCELED" ||
+                                    !pointRes.data.point.confirm.status.includes("REJECTED")
                                 ) && (
                                         <div className="flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-600">
                                             <i className="text-xs my-auto fa-regular fa-circle-check mr-2" />
-                                            <p>{pointRes.data.points.confirm.censor1.name} ({pointRes.data.points.confirm.censor1.id})</p>
+                                            <p>{pointRes.data.point.confirm.censor1.name} ({pointRes.data.point.confirm.censor1.id})</p>
                                         </div>
                                     )
                                 }
-                                {(pointRes.data.points.confirm.status === "DONE") && (
+                                {(pointRes.data.point.confirm.status === "DONE") && (
                                     <div className="ml-4 flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-600">
                                         <i className="text-xs my-auto fa-regular fa-circle-check mr-2" />
-                                        <p>{pointRes.data.points.confirm.censor2.name} ({pointRes.data.points.confirm.censor2.id})</p>
+                                        <p>{pointRes.data.point.confirm.censor2.name} ({pointRes.data.point.confirm.censor2.id})</p>
                                     </div>
                                 )}
                             </div>
@@ -112,11 +202,28 @@ const PointDetail = () => {
                             <hr />
                             <div className="flex mt-4 mb-3">
                                 <p className="font-semibold text-xl text-gray-600">Thông tin bài thi</p>
-                                <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
-                                    onClick={() => { }} >
-                                    <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
-                                    <p className="ml-2 my-auto">Phúc khảo</p>
-                                </button>
+                                {(!pointRes.data.exam.confirm || (
+                                    pointRes.data.exam.confirm.status !== "ACCEPTED" &&
+                                    pointRes.data.exam.confirm.status !== "DONE"
+                                )) && (
+                                        <>
+                                            {(!pointRes.data.exam.claim || pointRes.data?.exam?.claim?.status === "CANCELED") && (
+                                                <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                                    onClick={claimExam} >
+                                                    <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
+                                                    <p className="ml-2 my-auto">Phúc khảo</p>
+                                                </button>
+                                            )}
+                                            {pointRes.data?.exam?.claim?.status === "INITIALIZED" && (
+                                                <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                                    onClick={cancelExamClaim} >
+                                                    <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
+                                                    <p className="ml-2 my-auto">Hủy phúc khảo</p>
+                                                </button>
+                                            )}
+                                        </>
+                                    )
+                                }
                             </div>
 
                             <table className="w-full">
@@ -142,7 +249,7 @@ const PointDetail = () => {
                                 </tbody>
                             </table>
 
-                            {pointRes.data.points.confirm && (
+                            {pointRes.data.point.confirm && (
                                 <div className="mt-2 flex">
                                     {(pointRes.data.exam.confirm.status === "DONE") && (
                                         <div className="flex text-sm bg-[rgba(240,244,247,255)] font-semibold rounded-lg py-0.5 w-fit px-2.5 text-gray-600">
@@ -156,6 +263,17 @@ const PointDetail = () => {
                     )}
                 </>
             )}
+            <CreateClaim
+                toggle={creationToggle}
+                isShowing={isCreationShowing}
+                claimType={claimType.current}
+                objectId={objectId.current}
+                onSuccess={handleCreationClaim} />
+            <CancelClaim
+                toggle={cancelationToggle}
+                isShowing={isCancelationShowing}
+                claimId={claimId.current}
+                onSuccess={handleCancelationClaim} />
         </>
     )
 }

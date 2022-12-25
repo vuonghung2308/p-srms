@@ -99,7 +99,7 @@ export function ListExam() {
                 <>
                     <div className="my-3 flex">
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thi</p>
-                        {roomRes.data?.confirm.status === "INITIALIZED" && (
+                        {roomRes.data?.confirm?.status === "INITIALIZED" && (
                             <>
                                 <button className="ml-4 mr-4 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                     onClick={rejectionToggle}>

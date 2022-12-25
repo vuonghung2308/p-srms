@@ -33,7 +33,7 @@ claimRouter.put(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Claim:Create',
                 token, type, id, note
             );
@@ -67,7 +67,7 @@ claimRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Claim:Cancel',
                 token, id, note
             );
@@ -101,7 +101,7 @@ claimRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Claim:Accept',
                 token, id, note
             );
@@ -135,7 +135,7 @@ claimRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Claim:Reject',
                 token, id, note
             );
@@ -169,7 +169,7 @@ claimRouter.post(
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
         try {
-            const data = await transaction.evaluate(
+            const data = await transaction.submit(
                 contract, 'Claim:Done',
                 token, id, note
             );

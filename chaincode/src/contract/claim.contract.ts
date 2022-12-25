@@ -6,11 +6,8 @@ import { failed, success } from "../ledger/response";
 import { Claim, ClaimAction } from "../vo/claim";
 import { Point } from "../vo/point";
 import { Class } from "../vo/class";
-import { time } from "console";
 import { Room } from "../vo/room";
 import { Exam } from "../vo/exam";
-import { Teacher } from "../vo/teacher";
-import { Employee } from "../vo/employee";
 
 @Info({ title: 'ClaimContract', description: 'Smart contract for Claim' })
 export class ClaimContract extends BaseContract {

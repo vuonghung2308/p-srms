@@ -11,7 +11,7 @@ import { calculateAveragePoint, getNumberAveragePoint } from "../utils/point";
 import { Confirm } from "../vo/confirm";
 import { Room } from "../vo/room";
 import { Teacher } from "../vo/teacher";
-import { Employee } from "../vo/employee";
+import { Claim } from "../vo/claim";
 
 @Info({ title: 'PointContract', description: 'Smart contract for Point' })
 export class PointContract extends BaseContract {
@@ -89,27 +89,6 @@ export class PointContract extends BaseContract {
         return success({ ...point, student });
     }
 
-    // @Transaction(false)
-    // public async GetHistory(
-    //     ctx: Context, token: string,
-    //     studentId: string, classId: string
-    // ): Promise<string> {
-    //     this.currentPayload = jwt.verifyEmployee(token);
-    //     if (!await ledger.isStateExists(ctx, classId, "CLASS")) {
-    //         throw new Error(`The class ${classId} does not exist`);
-    //     }
-    //     if (!await ledger.isStateExists(ctx, studentId, "STUDENT")) {
-    //         throw new Error(`The student ${studentId} does not exist`);
-    //     }
-    //     const pointId = `${studentId}.${classId}`;
-    //     const point: Point = await ledger.getState(ctx, pointId, 'POINT')
-    //     if (!point) {
-    //         throw new Error(`The student ${studentId} is not in class ${classId}`);
-    //     }
-    //     const histories = await ledger.getHistory(ctx, pointId, 'POINT');
-    //     return JSON.stringify(histories);
-    // }
-
     @Transaction(false)
     public async GetPoints(
         ctx: Context, token: string
@@ -159,9 +138,10 @@ export class PointContract extends BaseContract {
                 msg: `The pointId ${pointId} is not valid`
             });
         }
-        const [cls, exam]: [Class, Exam] = await Promise.all([
+        const [cls, exam, claim]: [Class, Exam, Claim] = await Promise.all([
             ledger.getState(ctx, point.classId, "CLASS"),
-            ledger.getState(ctx, point.examId, "EXAM")
+            ledger.getState(ctx, point.examId, "EXAM"),
+            this.getClaim(ctx, point.id)
         ])
         const [subject, teacher, pConfirm]:
             [Subject, Teacher, Confirm] = await Promise.all([
@@ -174,7 +154,8 @@ export class PointContract extends BaseContract {
         if (point.examId) {
             const room: Room = await ledger.getState(ctx, exam.roomId, "ROOM");
             const teacher: Teacher = await ledger.getState(ctx, room.teacherId, "TEACHER");
-            delete exam.roomId; exam['room'] = room;
+            const claim: Claim = await this.getClaim(ctx, point.examId);
+            delete exam.roomId; exam['room'] = room; exam['claim'] = claim;
             delete room.teacherId; room['teacher'] = teacher;
             delete room.subjectId; delete exam['studentId'];
             const confirm: Confirm = await ledger.getFirstState(
@@ -216,19 +197,20 @@ export class PointContract extends BaseContract {
         delete point.classId; delete point.studentId;
         delete cls.teacherId; cls['teacher'] = teacher;
         delete cls.subjectId; cls['subject'] = subject;
-        delete point.examId;
+        delete point.examId; point['claim'] = claim;
+
         if (exam && exam['confirm'] &&
             exam['confirm'].status === "DONE"
         ) {
             return success({
                 class: cls,
-                points: point,
+                point: point,
                 exam: exam
             });
         } else {
             return success({
                 class: cls,
-                points: point
+                point: point
             });
         }
     }
@@ -345,5 +327,29 @@ export class PointContract extends BaseContract {
             averagePoint: average ? average : 0,
             numberOfAccumulatedCredit: totalPassed
         };
+    }
+
+    private async getClaim(
+        ctx: Context, objectId: string
+    ): Promise<Claim> {
+
+        const claim: Claim = await ledger.getFirstState(
+            ctx, "CLAIM", async (record: Claim) => {
+                return record.objectId === objectId
+            }
+        )
+
+        if (claim) {
+            claim.actions.sort((a, b) => b.time - a.time)
+            for (const action of claim.actions) {
+                const actor = await ledger.getState(
+                    ctx, action.actorId,
+                    action.actorType
+                );
+                action["actorName"] = actor.name;
+            }
+            return claim;
+        }
+        return undefined;
     }
 }
