@@ -490,7 +490,7 @@ export class ClaimContract extends BaseContract {
         }
 
         const action: ClaimAction = {
-            time: time, note: note, action: "ACCEPT",
+            time: time, note: note, action: "DONE",
             actorId: this.currentPayload.id,
             actorType: this.currentPayload.type,
         }
@@ -516,7 +516,7 @@ export class ClaimContract extends BaseContract {
                             msg: "You do not have permission"
                         });
                     }
-                    const point: Point = await ledger.getState(
+                    var point: Point = await ledger.getState(
                         ctx, claim.objectId, "POINT"
                     )
                     if (atPoint !== "undefined") {
@@ -531,6 +531,12 @@ export class ClaimContract extends BaseContract {
                     if (eePoint !== "undefined") {
                         point.exercisePoint = Number(eePoint);
                     } else point.exercisePoint = null;
+                    point.docType = 'POINT'
+                    await ledger.putState(
+                        ctx, this, point.id,
+                        point, point.docType
+                    );
+                    delete point.docType
                 }
                 if (claim.type === "EXAM_POINT") {
                     if (this.currentPayload.type !== "EMPLOYEE") {
@@ -539,12 +545,18 @@ export class ClaimContract extends BaseContract {
                             msg: "You do not have permission"
                         });
                     }
-                    const exam: Exam = await ledger.getState(
+                    var exam: Exam = await ledger.getState(
                         ctx, claim.objectId, "EXAM"
                     )
                     if (eaPoint !== "undefined") {
                         exam.point = Number(eaPoint);
                     } else exam.point = null;
+                    exam.docType = "EXAM";
+                    await ledger.putState(
+                        ctx, this, exam.id,
+                        exam, exam.docType
+                    );
+                    delete exam.docType;
                 }
                 claim.actions.push(action);
                 claim.status = "DONE";
@@ -555,6 +567,8 @@ export class ClaimContract extends BaseContract {
                 )
                 delete claim.docType;
                 const nClaim = await this.getActionData(ctx, claim);
+                if (point) nClaim["point"] = point;
+                if (exam) nClaim["exam"] = exam;
                 return success(nClaim);
             }
             case "STUDENT": case "ADMIN": default: {

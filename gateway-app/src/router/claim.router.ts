@@ -150,6 +150,11 @@ claimRouter.post(
     "/done",
     body('id', 'must be a string').notEmpty(),
     body('note', 'must be a string').notEmpty(),
+    body('attendancePoint', 'must be a number').optional().isNumeric(),
+    body('practicePoint', 'must be a number').optional().isNumeric(),
+    body('midtermExamPoint', 'must be a number').optional().isNumeric(),
+    body('exercisePoint', 'must be a number').optional().isNumeric(),
+    body('examPoint', 'must be a number').optional().isNumeric(),
     async (req: Request, res: Response) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -168,10 +173,16 @@ claimRouter.post(
 
         const contract: Contract = req.app.locals.contract;
         const token: string = req.headers.token as string;
+
+        const attendancePoint = String(req.body.attendancePoint);
+        const practicePoint = String(req.body.practicePoint);
+        const midtermExamPoint = String(req.body.midtermExamPoint);
+        const exercisePoint = String(req.body.exercisePoint);
+        const examPoint: string = String(req.body.examPoint);
         try {
             const data = await transaction.submit(
-                contract, 'Claim:Done',
-                token, id, note
+                contract, 'Claim:Done', token, id, note, examPoint,
+                attendancePoint, practicePoint, midtermExamPoint, exercisePoint
             );
             return handleTransactionRes(res, data);
         } catch (err) {

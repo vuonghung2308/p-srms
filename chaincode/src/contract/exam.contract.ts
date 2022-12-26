@@ -179,10 +179,10 @@ export class ExamContract extends BaseContract {
                 ctx, exam.roomId, "ROOM"
             );
             if (room && room.teacherId === this.currentPayload.id) {
-                exam.docType = "EXAM";
                 if (point !== "undefined") {
                     exam.point = Number(point);
                 } else exam.point = null;
+                exam.docType = "EXAM";
                 await ledger.putState(
                     ctx, this, exam.id,
                     exam, exam.docType

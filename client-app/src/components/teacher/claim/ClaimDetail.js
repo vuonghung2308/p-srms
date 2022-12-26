@@ -4,6 +4,7 @@ import { getClaim } from "../../../api/claim";
 import { strTime } from "../../../ultils/time";
 import useModal from "../../common/Modal/use";
 import AcceptClaim from "./AcceptClaim";
+import DoneClaim from "./DoneClaim";
 import RejectClaim from "./RejectClaim";
 
 export const ClaimDetail = () => {
@@ -21,13 +22,22 @@ export const ClaimDetail = () => {
         toggle: rejectionToggle
     } = useModal();
 
+    const {
+        isShowing: isDoneShowing,
+        toggle: doneToggle
+    } = useModal();
+
     const updateClaim = (data) => {
+        const newPoint = data.point ? data.point : claimRes.data.point
+        const newExam = data.exam ? data.exam : claimRes.data.exam
         setClaimRes({
             ...claimRes,
             data: {
                 ...claimRes.data,
                 status: data.status,
-                actions: data.actions
+                actions: data.actions,
+                point: newPoint,
+                exam: newExam
             }
         });
         setTimeout(() => {
@@ -42,6 +52,11 @@ export const ClaimDetail = () => {
     const handleRejectionClaim = (data) => {
         updateClaim(data);
         rejectionToggle();
+    }
+
+    const handleDoneClaim = (data) => {
+        updateClaim(data);
+        doneToggle();
     }
 
     useEffect(() => {
@@ -67,7 +82,7 @@ export const ClaimDetail = () => {
                         {claimRes.data.status === "ACCEPTED" && (
                             <>
                                 <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                    onClick={null}>Xử lý</Link>
+                                    onClick={doneToggle}>Xử lý</Link>
                             </>
                         )}
                     </div>
@@ -132,6 +147,12 @@ export const ClaimDetail = () => {
                         isShowing={isRejectionShowing}
                         claimId={claimId}
                         onSuccess={handleRejectionClaim} />
+                    <DoneClaim
+                        isShowing={isDoneShowing}
+                        toggle={doneToggle}
+                        claimId={claimId}
+                        onSuccess={handleDoneClaim}
+                        point={claimRes.data.point} />
                 </>
             )}
         </>

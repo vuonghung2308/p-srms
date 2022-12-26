@@ -50,3 +50,17 @@ export async function rejectClaim(claimId, note) {
         method: 'POST',
     });
 }
+
+export async function doneClaim(
+    claimId, note, eaPoint, atPoint,
+    prPoint, miPoint, eePoint
+) {
+    return send(`${baseUrl}/claim/done`, {
+        body: JSON.stringify({
+            id: claimId, note, examPoint: eaPoint,
+            attendancePoint: atPoint, practicePoint: prPoint,
+            midtermExamPoint: miPoint, exercisePoint: eePoint
+        }),
+        method: 'POST',
+    });
+}
