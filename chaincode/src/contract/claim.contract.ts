@@ -48,8 +48,28 @@ export class ClaimContract extends BaseContract {
                             record['teacher'] = teacher;
                             record['class'] = cls;
                             cls['subject'] = subject;
-                            return record.studentId === this.currentPayload.id
-                        } else { return false; }
+                        } else {
+                            const point: Point = await ledger.getFirstState(
+                                ctx, "POINT", async (r) => r.examId === record.objectId
+                            );
+                            const cls: Class = await ledger.getState(
+                                ctx, point.classId, "CLASS"
+                            );
+                            const exam: Exam = await ledger.getState(
+                                ctx, record.objectId, "EXAM"
+                            );
+                            const room: Room = await ledger.getState(
+                                ctx, exam.roomId, "ROOM"
+                            );
+                            const subject: Subject = await ledger.getState(
+                                ctx, room.subjectId, "SUBJECT"
+                            );
+                            cls['subject'] = subject;
+                            record['class'] = cls;
+                            record['exam'] = exam;
+                            record['room'] = room;
+                        }
+                        return record.studentId === this.currentPayload.id
 
                     }
                 );
@@ -58,6 +78,31 @@ export class ClaimContract extends BaseContract {
             case "EMPLOYEE": {
                 claims = await ledger.getStates(
                     ctx, "CLAIM", async (record: Claim) => {
+                        if (record.type === "EXAM_POINT") {
+                            const student: Student = await ledger.getState(
+                                ctx, record.studentId, "STUDENT"
+                            );
+                            const point: Point = await ledger.getFirstState(
+                                ctx, "POINT", async (r) => r.examId === record.objectId
+                            );
+                            const cls: Class = await ledger.getState(
+                                ctx, point.classId, "CLASS"
+                            );
+                            const exam: Exam = await ledger.getState(
+                                ctx, record.objectId, "EXAM"
+                            );
+                            const room: Room = await ledger.getState(
+                                ctx, exam.roomId, "ROOM"
+                            );
+                            const subject: Subject = await ledger.getState(
+                                ctx, room.subjectId, "SUBJECT"
+                            );
+                            cls['subject'] = subject;
+                            record['class'] = cls;
+                            record['exam'] = exam;
+                            record['room'] = room;
+                            record['student'] = student;
+                        }
                         return record.type === "EXAM_POINT"
                     }
                 );
@@ -118,19 +163,34 @@ export class ClaimContract extends BaseContract {
                 ctx, claim.studentId, "STUDENT"
             );
             if (claim.type === "COMPONENTS_POINT") {
-                var point: Point = await ledger.getState(
+                const point: Point = await ledger.getState(
                     ctx, claim.objectId, "POINT"
                 );
                 var cls: Class = await ledger.getState(
                     ctx, point.classId, "CLASS"
                 );
-                var subject: Subject = await ledger.getState(
+                const subject: Subject = await ledger.getState(
                     ctx, cls.subjectId, "SUBJECT"
                 );
                 cls['subject'] = subject;
                 claim['student'] = student;
                 claim['class'] = cls;
                 claim['point'] = point;
+            }
+            if (claim.type === "EXAM_POINT") {
+                const exam: Exam = await ledger.getState(
+                    ctx, claim.objectId, "EXAM"
+                );
+                const room: Room = await ledger.getState(
+                    ctx, exam.roomId, "ROOM"
+                );
+                const subject: Subject = await ledger.getState(
+                    ctx, room.subjectId, "SUBJECT"
+                );
+                exam['subject'] = subject;
+                claim['student'] = student;
+                claim['exam'] = exam;
+                claim['room'] = room;
             }
             const nClaim = await this.getActionData(
                 ctx, claim
@@ -258,11 +318,7 @@ export class ClaimContract extends BaseContract {
                     )
                 ]);
                 // check exam is confirmed here
-                if (exam !== null && points.length == 1) {
-                    const room: Room = await ledger.getState(
-                        ctx, exam.teacherId, "TEACHER"
-                    );
-                    claim.teacherId = room.teacherId;
+                if (exam !== null && points.length === 1) {
                     await ledger.putState(
                         ctx, this, claim.id,
                         claim, claim.docType
@@ -567,8 +623,8 @@ export class ClaimContract extends BaseContract {
                 )
                 delete claim.docType;
                 const nClaim = await this.getActionData(ctx, claim);
-                if (point) nClaim["point"] = point;
                 if (exam) nClaim["exam"] = exam;
+                if (point) nClaim["point"] = point;
                 return success(nClaim);
             }
             case "STUDENT": case "ADMIN": default: {

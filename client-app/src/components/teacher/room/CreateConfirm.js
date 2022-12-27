@@ -58,7 +58,7 @@ export default function CreateConfirm({
                             </button>
                         </div>
 
-                        <textarea rows={3} type="text" className="mt-4 text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal resize-none"
+                        <textarea rows={3} type="text" className="mt-6 text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal resize-none"
                             placeholder="Chú thích thêm" value={note} onChange={e => setNote(e.target.value)} />
                         {status.status === "FAILED" ? (
                             <p className="text-sm text-red-500 font-semibold mt-1 ml-1">

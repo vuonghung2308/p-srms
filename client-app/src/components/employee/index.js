@@ -23,10 +23,10 @@ const Content = ({ className }) => {
                     Phòng thi
                 </Link>
                 <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
-                    to="">
+                    to="phuc-khao">
                     Phúc khảo
                 </Link>
-                <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
+                {/* <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
                     to="">
                     Môn học
                 </Link>
@@ -37,7 +37,7 @@ const Content = ({ className }) => {
                 <Link className="text-gray-600 font-semibold hover:text-red-dark ml-4"
                     to="">
                     Sinh viên
-                </Link>
+                </Link> */}
             </div>
             <hr />
             <div className="container mx-auto px-44"><Outlet /></div>

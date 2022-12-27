@@ -95,6 +95,23 @@ export function ListExam() {
                 <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin phòng thi</p>
             </div>
             <hr />
+            {roomRes.status === "SUCCESS" && (
+                <div className="mt-4">
+                    <p className="font-semibold mb-3 text-xl text-gray-600">Chi tiết phòng thi</p>
+                    <div>
+                        <p className="inline">Phòng thi: {roomRes.data.roomName}</p>
+                        <p className="inline ml-4">Môn học: {roomRes.data.subject.name} ({roomRes.data.subject.id})</p>
+                    </div>
+                    <div className="pt-0.5">
+                        <p className="inline">Học kỳ: {roomRes.data.semester} năm {roomRes.data.year}-{roomRes.data.year + 1}</p>
+                        <p className="inline ml-4">Giáo viên:  {roomRes.data.teacher.name} ({roomRes.data.teacher.id})</p>
+                    </div>
+                    <div className="pt-0.5">
+                        <p className="inline">Thời gian: {new Date(roomRes.data.timeStart * 1000).toLocaleString()} ({roomRes.data.duration} phút)</p>
+                    </div>
+                    <hr className="my-4" />
+                </div>
+            )}
             {examsRes.status === "SUCCESS" && examsRes.data.length > 0 && (
                 <>
                     <div className="my-3 flex">
@@ -168,9 +185,15 @@ export function ListExam() {
                             ))}
                         </tbody>
                     </table>
-                    {roomRes.data?.confirm?.actions.map((action, index) => (
-                        <Action action={action} key={index} />
-                    ))}
+                    {roomRes.data?.confirm?.actions.length > 0 && (
+                        <>
+                            <hr />
+                            <p className="font-semibold mt-4 text-xl text-gray-600">Lịch sử yêu cầu</p>
+                            {roomRes.data?.confirm?.actions.map((action, index) => (
+                                <Action action={action} key={index} />
+                            ))}
+                        </>
+                    )}
                     <CreateConfirm
                         toggle={creationToggle}
                         isShowing={isCreationShowing}
@@ -188,7 +211,7 @@ export function ListExam() {
 
 const Action = ({ action }) => {
     return (
-        <div className="mx-4 mt-4">
+        <div className="mt-3">
             <div className="flex">
                 {action.action === "INITIALIZE" && (
                     <p className="text font-semibold text-gray-500">Nộp bảng điểm thi</p>

@@ -94,7 +94,7 @@ export const ClaimDetail = () => {
                             <p className="inline ml-4">Học kỳ {claimRes.data.class.semester}</p>
                             <p className="inline"> năm học {claimRes.data.class.year}-{claimRes.data.class.year + 1}</p>
                         </div>
-                        <div className="pt-1">
+                        <div className="pt-0.5">
                             <p className="inline">Mã môn: {claimRes.data.class.subject.id}</p>
                             <p className="inline ml-4">Tên môn: {claimRes.data.class.subject.name}</p>
                             <p className="inline ml-4">Số tín: {claimRes.data.class.subject.numberOfCredit}</p>

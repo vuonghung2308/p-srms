@@ -26,6 +26,8 @@ import Backup from "./components/admin/backup/Backup";
 import PointDetail from "./components/student/points/PointDetail";
 import { ListClaim as TListClaim } from "./components/teacher/claim/ListClaim";
 import { ListClaim as SListClaim } from "./components/student/claim/ListClaim";
+import { ListClaim as EListClaim } from "./components/employee/claim/ListClaim";
+import { ClaimDetail as EClaimDetail } from "./components/employee/claim/ClaimDetail";
 import { ClaimDetail as TClaimDetail } from "./components/teacher/claim/ClaimDetail";
 import { ClaimDetail as SClaimDetail } from "./components/student/claim/ClaimDetail";
 
@@ -74,6 +76,10 @@ export default function App() {
               <Route path=":roomId" element={<Outlet />}>
                 <Route index element={<EListExam />} />
               </Route>
+            </Route>
+            <Route path="phuc-khao" element={<Outlet />}>
+              <Route index element={<EListClaim />} />
+              <Route path=":claimId" element={<EClaimDetail />} />
             </Route>
           </Route>
         </Routes>

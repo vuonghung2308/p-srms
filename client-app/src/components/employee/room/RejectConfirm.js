@@ -51,7 +51,7 @@ export default function RejectConfirm({
                             </button>
                         </div>
 
-                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
+                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-6 resize-none"
                             placeholder="Chú thích thêm" value={note} onChange={e => setNote(e.target.value)} />
 
                         {status.status === "FAILED" ? (

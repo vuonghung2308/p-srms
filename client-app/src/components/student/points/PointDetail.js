@@ -90,7 +90,7 @@ const PointDetail = () => {
                             <p className="inline ml-4">Tên môn: {pointRes.data.class.subject.name}</p>
                             <p className="inline ml-4">Số tín: {pointRes.data.class.subject.numberOfCredit}</p>
                         </div>
-                        <div className="pt-1">
+                        <div className="pt-0.5">
                             <p className="inline">Học kỳ: {pointRes.data.class.semester}</p>
                             <p className="inline ml-4">Năm học: {pointRes.data.class.year}-{pointRes.data.class.year + 1}</p>
                             <p className="inline ml-4">Giáo viên: {pointRes.data.class.teacher.id} - {pointRes.data.class.teacher.name}</p>
@@ -175,25 +175,21 @@ const PointDetail = () => {
                         )}
                     </div>
                     {pointRes.data.exam && (
-                        <div className="mt-4">
+                        <div className="mt-10">
                             <hr />
                             <div className="flex mt-4 mb-3">
                                 <p className="font-semibold text-xl text-gray-600">Thông tin bài thi</p>
-                                {(!pointRes.data.exam.confirm || (
-                                    pointRes.data.exam.confirm.status !== "ACCEPTED" &&
-                                    pointRes.data.exam.confirm.status !== "DONE"
-                                )) && (
-                                        <>
-                                            {(!pointRes.data.exam.claim || pointRes.data?.exam?.claim?.status === "CANCELED") && (
-                                                <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
-                                                    onClick={claimExam} >
-                                                    <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
-                                                    <p className="ml-2 my-auto">Phúc khảo</p>
-                                                </button>
-                                            )}
-                                        </>
-                                    )
-                                }
+                                {pointRes.data.exam.confirm.status === "DONE" && (
+                                    <>
+                                        {(!pointRes.data.exam.claim || pointRes.data?.exam?.claim?.status === "CANCELED") && (
+                                            <button className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
+                                                onClick={claimExam} >
+                                                <i className="ml-1 my-auto text-xs fa-solid fa-exclamation" />
+                                                <p className="ml-2 my-auto">Phúc khảo</p>
+                                            </button>
+                                        )}
+                                    </>
+                                )}
                                 {pointRes.data?.exam?.claim && (
                                     <Link className="my-auto ml-4 mr-4 h-fit py-0.5 flex border text-sm hover:border-red-normal px-2 text-gray-500 font-semibold rounded-lg hover:text-red-normal"
                                         to={`/phuc-khao/${pointRes.data.exam.claim.id}`} >

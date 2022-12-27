@@ -1,8 +1,5 @@
-import { Context, Info, Transaction } from "fabric-contract-api";
-import * as ledger from "../ledger/common";
+import { Info } from "fabric-contract-api";
 import { BaseContract } from "./contract";
-import * as jwt from "../auth/jwt";
-
 
 @Info({ title: 'EmployeeContract', description: 'Smart contract for Employee' })
 export class EmployeeContract extends BaseContract {

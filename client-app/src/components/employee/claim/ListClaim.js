@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getClaims } from "../../../api/claim";
-import { strTime } from "../../../ultils/time";
 
 export const ListClaim = () => {
     const shouldFetch = useRef(true);
@@ -23,12 +22,12 @@ export const ListClaim = () => {
                     <thead>
                         <tr className="bg-gray-200 text-gray-600">
                             <th className="border-4 border-white py-0.5">STT</th>
+                            <th className="border-4 border-white">Mã sinh viên</th>
+                            <th className="border-4 border-white">Tên sinh viên</th>
                             <th className="border-4 border-white">Mã Lớp</th>
                             <th className="border-4 border-white">Tên môn học</th>
                             <th className="border-4 border-white">Năm học</th>
                             <th className="border-4 border-white">Kỳ học</th>
-                            <th className="border-4 border-white">Loại</th>
-                            <th className="border-4 border-white">Thời gian tạo</th>
                             <th className="border-4 border-white"></th>
                         </tr>
                     </thead>
@@ -46,16 +45,15 @@ export const ListClaim = () => {
 }
 
 const Claim = ({ claim, index }) => {
-    const type = claim.type === "EXAM_POINT" ? "Điểm thi" : "Điểm thành phần"
     return (
         <tr className="border-b">
             <td className="text-center py-0.5">{index + 1}</td>
+            <td className="text-center">{claim.student.id}</td>
+            <td className="pl-4">{claim.student.name}</td>
             <td className="text-center">{claim.class.id}</td>
             <td className="pl-4">{claim.class.subject.name}</td>
             <td className="text-center">{claim.class.year}-{claim.class.year + 1}</td>
             <td className="text-center">{claim.class.semester}</td>
-            <td className="text-center">{type}</td>
-            <td className="text-center">{strTime(claim.actions[0].time)}</td>
             <td >
                 <Link className="mx-auto w-fit flex font-semibold text-sm text-gray-500 hover:text-red-normal hover:border-red-normal rounded-lg border px-2"
                     to={`${claim.id}`}>

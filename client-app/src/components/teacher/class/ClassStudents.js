@@ -161,17 +161,17 @@ export function ClassStudents() {
                         <p className="inline ml-4">Mã môn học: {classRes.data.subject.id}</p>
                         <p className="inline ml-4">Tên môn học: {classRes.data.subject.name}</p>
                     </div>
-                    <div className="pt-1">
+                    <div className="pt-0.5">
                         <p className="inline">Học kỳ: {classRes.data.semester}</p>
                         <p className="inline ml-4">Năm học: {classRes.data.year}-{classRes.data.year + 1}</p>
                         <p className="inline ml-4">Giáo viên: {classRes.data.teacher.id} - {classRes.data.teacher.name}</p>
                     </div>
+                    <hr className="my-3" />
                 </div>
 
             )}
             {pointsRes.status === "SUCCESS" && pointsRes.data.length > 0 && (
                 <>
-                    <hr className="my-3" />
                     <div className="flex">
                         <p className="font-semibold text-xl text-gray-600">Bảng điểm thành phần</p>
                         {classRes.data && classRes.data.teacher.id === payload.id && (
@@ -293,9 +293,16 @@ export function ClassStudents() {
                             })}
                         </tbody>
                     </table>
-                    {classRes.data?.confirm?.actions.map((action, index) => (
-                        <Action action={action} key={index} />
-                    ))}
+
+                    {classRes.data?.confirm?.actions.length > 0 && (
+                        <>
+                            <hr />
+                            <p className="font-semibold mt-4 text-xl text-gray-600">Lịch sử yêu cầu</p>
+                            {classRes.data?.confirm?.actions.map((action, index) => (
+                                <Action action={action} key={index} />
+                            ))}
+                        </>
+                    )}
                     <CreateConfirm
                         toggle={creationToggle}
                         isShowing={isCreationShowing}
@@ -323,7 +330,7 @@ export function ClassStudents() {
 
 const Action = ({ action }) => {
     return (
-        <div className="mx-4 mt-4">
+        <div className="mt-3">
             <div className="flex">
                 {action.action === "INITIALIZE" && (
                     <div className="flex">

@@ -3,8 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { getClaim } from "../../../api/claim";
 import { strDate, strHour, strTime } from "../../../ultils/time";
 import useModal from "../../common/Modal/use";
-import CancelClaim from "./CancelClaim";
-import CreateClaim from "./CreateClaim";
+import DoneClaim from "../claim/DoneClaim";
+import AcceptClaim from "./AcceptClaim";
+import RejectClaim from "./RejectClaim";
 
 export const ClaimDetail = () => {
     const { claimId } = useParams();
@@ -14,36 +15,51 @@ export const ClaimDetail = () => {
     const [claimRes, setClaimRes] = useState({ status: "NONE" });
 
     const {
-        isShowing: isCreationShowing,
-        toggle: creationToggle
+        isShowing: isAcceptanceShowing,
+        toggle: acceptanceToggle
     } = useModal();
 
     const {
-        isShowing: isCancelationShowing,
-        toggle: cancelationToggle
+        isShowing: isRejectionShowing,
+        toggle: rejectionToggle
+    } = useModal();
+
+    const {
+        isShowing: isDoneShowing,
+        toggle: doneToggle
     } = useModal();
 
     const updateClaim = (data) => {
+        const newExam = { ...claimRes.data.exam };
+        if (data.exam) {
+            newExam.point = data.exam.point
+        }
         setClaimRes({
             ...claimRes,
             data: {
                 ...claimRes.data,
                 status: data.status,
-                actions: data.actions
+                actions: data.actions,
+                exam: newExam
             }
         });
         setTimeout(() => {
             alert("Xử lý yêu cầu thành công!")
         }, 200);
     }
-    const handleCancelationClaim = (data) => {
+    const handleAcceptanceClaim = (data) => {
         updateClaim(data);
-        cancelationToggle();
+        acceptanceToggle();
     }
 
-    const handleCreationClaim = (data) => {
+    const handleRejectionClaim = (data) => {
         updateClaim(data);
-        creationToggle();
+        rejectionToggle();
+    }
+
+    const handleDoneClaim = (data) => {
+        updateClaim(data);
+        doneToggle();
     }
 
     useEffect(() => {
@@ -65,18 +81,21 @@ export const ClaimDetail = () => {
                     <div className="py-4">
                         <p className="inline text-gray-600 font-semibold text-[30px]">Thông tin yêu cầu</p>
                         {claimRes.data.status === "INITIALIZED" && (
-                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                onClick={cancelationToggle}>Hủy yêu cầu</Link>
+                            <>
+                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                                    onClick={acceptanceToggle}>Tiếp nhận</Link>
+                                <Link className="inline text-gray-600 font-semibold hover:text-red-dark"
+                                    onClick={rejectionToggle}>Từ chối</Link>
+                            </>
                         )}
-                        {claimRes.data.status === "CANCELED" && (
-                            <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
-                                onClick={creationToggle}>Yêu cầu lại</Link>
+                        {claimRes.data.status === "ACCEPTED" && (
+                            <>
+                                <Link className="inline text-gray-600 font-semibold mx-4 hover:text-red-dark"
+                                    onClick={doneToggle}>Xử lý</Link>
+                            </>
                         )}
                     </div>
                     <hr />
-                    {claimRes.data?.type === "COMPONENTS_POINT" && (
-                        <PointClaim claim={claimRes.data} />
-                    )}
                     {claimRes.data?.type === "EXAM_POINT" && (
                         <ExamClaim claim={claimRes.data} />
                     )}
@@ -87,17 +106,22 @@ export const ClaimDetail = () => {
                             <Action action={action} key={index} />
                         ))}
                     </div>
-                    <CreateClaim
-                        toggle={creationToggle}
-                        isShowing={isCreationShowing}
-                        claimType={claimType.current}
-                        objectId={objectId.current}
-                        onSuccess={handleCreationClaim} />
-                    <CancelClaim
-                        toggle={cancelationToggle}
-                        isShowing={isCancelationShowing}
+                    <AcceptClaim
+                        toggle={acceptanceToggle}
+                        isShowing={isAcceptanceShowing}
                         claimId={claimId}
-                        onSuccess={handleCancelationClaim} />
+                        onSuccess={handleAcceptanceClaim} />
+                    <RejectClaim
+                        toggle={rejectionToggle}
+                        isShowing={isRejectionShowing}
+                        claimId={claimId}
+                        onSuccess={handleRejectionClaim} />
+                    <DoneClaim
+                        isShowing={isDoneShowing}
+                        toggle={doneToggle}
+                        claimId={claimId}
+                        onSuccess={handleDoneClaim}
+                        exam={claimRes.data.exam} />
                 </>
             )}
         </>
@@ -108,8 +132,17 @@ export const ClaimDetail = () => {
 const ExamClaim = ({ claim }) => {
     return (
         <>
-            <p className="font-semibold text-xl text-gray-600 mt-4">Thông tin bài thi</p>
-
+            <p className="font-semibold text-xl text-gray-600 mt-4 mb-2">Thông tin bài thi</p>
+            <div>
+                <p className="inline">Tên phòng thi: {claim.room.roomName}</p>
+                <p className="inline ml-4">Học kỳ {claim.room.semester}</p>
+                <p className="inline"> năm học {claim.room.year}-{claim.room.year + 1}</p>
+            </div>
+            <div className="pt-0.5">
+                <p className="inline">Mã môn: {claim.exam.subject.id}</p>
+                <p className="inline ml-4">Tên môn: {claim.exam.subject.name}</p>
+                <p className="inline ml-4">Số tín: {claim.exam.subject.numberOfCredit}</p>
+            </div>
             <table className="mt-4 mb-2 w-full">
                 <thead className="text-gray-600 font-semibold border-b">
                     <tr>
@@ -132,57 +165,6 @@ const ExamClaim = ({ claim }) => {
                     </tr>
                 </tbody>
             </table>
-        </>
-    )
-}
-
-const PointClaim = ({ claim }) => {
-    return (
-        <>
-            <>
-                <div className="mt-4">
-                    <p className="font-semibold mb-3 text-xl text-gray-600">Thông tin lớp học</p>
-                    <div>
-                        <p className="inline">Lớp học: {claim.class.id}</p>
-                        <p className="inline ml-4">Học kỳ {claim.class.semester}</p>
-                        <p className="inline"> năm học {claim.class.year}-{claim.class.year + 1}</p>
-                    </div>
-                    <div className="pt-0.5">
-                        <p className="inline">Mã môn: {claim.class.subject.id}</p>
-                        <p className="inline ml-4">Tên môn: {claim.class.subject.name}</p>
-                        <p className="inline ml-4">Số tín: {claim.class.subject.numberOfCredit}</p>
-                    </div>
-                </div>
-                <table className="w-full mt-4 mb-2">
-                    <thead className="text-gray-600 font-semibold border-b">
-                        <tr>
-                            <th className="pb-1.5">%CC</th>
-                            <th className="pb-1.5">%TH</th>
-                            <th className="pb-1.5">%BT</th>
-                            <th className="pb-1.5">%KT</th>
-                            <th className="pb-1.5">%Thi</th>
-                            <th className="pb-1.5">Điểm CC</th>
-                            <th className="pb-1.5">Điểm TH</th>
-                            <th className="pb-1.5">Điểm BT</th>
-                            <th className="pb-1.5">Điểm KT</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td className="text-center pt-1.5">{claim.class.subject.attendancePointRate}</td>
-                            <td className="text-center pt-1.5">{claim.class.subject.practicePointRate}</td>
-                            <td className="text-center pt-1.5">{claim.class.subject.exercisePointRate}</td>
-                            <td className="text-center pt-1.5">{claim.class.subject.midtermExamPointRate}</td>
-                            <td className="text-center pt-1.5">{claim.class.subject.finalExamPointRate}</td>
-
-                            <td className="text-center pt-1.5">{claim.point.attendancePoint}</td>
-                            <td className="text-center pt-1.5">{claim.point.practicePoint}</td>
-                            <td className="text-center pt-1.5">{claim.point.exercisePoint}</td>
-                            <td className="text-center pt-1.5">{claim.point.midtermExamPoint}</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </>
         </>
     )
 }

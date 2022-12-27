@@ -95,7 +95,7 @@ export default function DoneClaim({
                             </div>
                         </div>
 
-                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-4 resize-none"
+                        <textarea rows={3} type="text" className="text-gray-600 block rounded-lg w-full border outline-none border-gray-400 px-2.5 py-1.5 focus:border-red-normal mt-6 resize-none"
                             placeholder="Ghi chú thêm" value={note} onChange={e => setNote(e.target.value)} />
                         {status.status === "FAILED" ? (
                             <p className="text-sm text-red-500 font-semibold mt-1 ml-1">
