@@ -292,7 +292,8 @@ export class ClassContract extends BaseContract {
                 msg: `The subject ${subjectId} does not exist`
             });
         }
-        if (!await ledger.isStateExists(ctx, teacherId, "TEACHER")) {
+        const teacher = await ledger.getState(ctx, teacherId, "TEACHER");
+        if (!teacher) {
             return failed({
                 code: "NOT_EXISTED", param: 'teacherId',
                 msg: `The teacher ${teacherId} does not exist`
@@ -309,7 +310,7 @@ export class ClassContract extends BaseContract {
             cls, cls.docType
         );
         delete cls['docType'];
-        return success({ ...cls, subject });
+        return success({ ...cls, subject, teacher });
     }
 
     @Transaction()
