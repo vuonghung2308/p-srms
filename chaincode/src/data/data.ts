@@ -106,7 +106,7 @@ const listClass: Class[] = [
         semester: 'I', teacherId: 'T1'
     },
     {
-        id: 'D18-023', subjectId: 'BAS1203', year: 2022,
+        id: 'D18-023', subjectId: 'BAS1201', year: 2022,
         semester: 'I', teacherId: 'T2'
     },
 ];
