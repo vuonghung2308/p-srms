@@ -10,4 +10,12 @@ export class Teacher {
     public name: string;
     @Property()
     public address: string;
+    @Property()
+    public dateOfBirth: number;
+    @Property()
+    public email: string;
+    @Property()
+    public phone: string;
+    @Property()
+    public faculty: string;
 }

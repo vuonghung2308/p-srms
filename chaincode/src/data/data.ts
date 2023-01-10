@@ -10,22 +10,56 @@ import { Admin } from "../vo/admin";
 import { BaseContract } from "../contract/contract";
 
 const listStudent: Student[] = [
-    { id: 'S1', name: 'Vương Mạnh Hùng', address: 'Nam Định' },
-    { id: 'S2', name: 'Nguyễn Văn Tùng', address: 'Hà Nội' }
+    {
+        id: 'S1', name: 'Vương Mạnh Hùng', address: 'Nam Định',
+        dateOfBirth: new Date("2000-8-23").getTime() / 1000,
+        class: "D18CNPM04", email: "hungvm@gmail.com", major: "Công nghệ phần mềm",
+        faculty: "Công nghệ thông tin 1", phone: "0857865006"
+    },
+    {
+        id: 'S2', name: 'Nguyễn Văn Tùng', address: 'Hà Nội',
+        dateOfBirth: new Date("2000-12-2").getTime() / 1000,
+        class: "D18CNPM04", email: "tungnv@gmail.com", major: "Công nghệ phần mềm",
+        faculty: "Công nghệ thông tin 1", phone: "0957865106"
+    }
 ];
 
 const listTeacher: Teacher[] = [
-    { id: 'T1', name: 'Đào Thị Quỳnh', address: 'Ninh Bình' },
-    { id: 'T2', name: 'Nguyễn Văn Kim', address: 'Hà Nội' }
+    {
+        id: 'T1', name: 'Đào Thị Quỳnh', address: 'Ninh Bình',
+        dateOfBirth: new Date("1989-1-2").getTime() / 1000,
+        email: "quynhdt@gmail.com", phone: "0357865106",
+        faculty: "Công nghệ thông tin 1"
+    },
+    {
+        id: 'T2', name: 'Nguyễn Văn Kim', address: 'Hà Nội',
+        dateOfBirth: new Date("1982-12-3").getTime() / 1000,
+        email: "kimnv@gmail.com", phone: "0157865106",
+        faculty: "Công nghệ thông tin 1"
+    }
 ];
 
 const listEmployee: Employee[] = [
-    { id: 'E1', name: 'Trần Kim Anh', address: 'Hà Nam' },
-    { id: 'E2', name: 'Hoàng Văn Khoa', address: 'Thái Bình' }
+    {
+        id: 'E1', name: 'Trần Kim Anh', address: 'Hà Nam',
+        dateOfBirth: new Date("1992-1-2").getTime() / 1000,
+        email: "quynhdt@gmail.com", phone: "0357865106",
+        position: "Phòng khảo thí"
+    },
+    {
+        id: 'E2', name: 'Hoàng Văn Khoa', address: 'Thái Bình',
+        dateOfBirth: new Date("1982-3-2").getTime() / 1000,
+        email: "quynhdt@gmail.com", phone: "0357865106",
+        position: "Phòng khảo thí"
+    }
 ];
 
 const listAdmin: Admin[] = [
-    { id: 'A1', name: 'Vương Mạnh Hùng', address: 'Nam Định' }
+    {
+        id: 'A1', name: 'Vương Mạnh Hùng', address: 'Nam Định',
+        dateOfBirth: new Date("2000-12-2").getTime() / 1000,
+        email: "quynhdt@gmail.com", phone: "0357865106"
+    }
 ];
 
 const listAccount: Account[] = [

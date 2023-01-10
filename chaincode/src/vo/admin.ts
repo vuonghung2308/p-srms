@@ -10,4 +10,10 @@ export class Admin {
     public name: string;
     @Property()
     public address: string;
+    @Property()
+    public dateOfBirth: number;
+    @Property()
+    public email: string;
+    @Property()
+    public phone: string;
 }
