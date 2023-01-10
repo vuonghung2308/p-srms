@@ -22,13 +22,43 @@ export default function StudentInfo() {
             <hr />
             {infoRes.status === "SUCCESS" && (
                 <>
-                    <div className="mt-2">
-                        <span>Họ và tên: </span>
-                        <span className="ml-1">{infoRes.data.name}</span>
-                    </div>
-                    <div className="mt-1">
-                        <span>Địa chỉ:</span>
-                        <span className="ml-1">{infoRes.data.address}</span>
+                    <div className="flex">
+                        <div className="flex-1">
+                            <div className="mt-3">
+                                <span className="font-semibold">Họ và tên: </span>
+                                <span className="">{infoRes.data.name}</span>
+                            </div>
+                            <div className="mt-1">
+                                <span className="font-semibold">Ngày sinh: </span>
+                                <span className="">{new Date(infoRes.data.dateOfBirth * 1000).toLocaleDateString()}</span>
+                            </div>
+                            <div className="mt-1">
+                                <span className="font-semibold">Chuyên ngành: </span>
+                                <span className="">{infoRes.data.major}</span>
+                            </div>
+                            <div className="mt-1">
+                                <span className="font-semibold">Khoa: </span>
+                                <span className="">{infoRes.data.faculty}</span>
+                            </div>
+                        </div>
+                        <div className="flex-1 ml-10">
+                            <div className="mt-3">
+                                <span className="font-semibold">Lớp: </span>
+                                <span className="">{infoRes.data.class}</span>
+                            </div>
+                            <div className="mt-1">
+                                <span className="font-semibold">Địa chỉ: </span>
+                                <span className="">{infoRes.data.address}</span>
+                            </div>
+                            <div className="mt-1">
+                                <span className="font-semibold">Email: </span>
+                                <span className="">{infoRes.data.email}</span>
+                            </div>
+                            <div className="mt-1">
+                                <span className="font-semibold">Số điện thoại: </span>
+                                <span className="">{infoRes.data.phone}</span>
+                            </div>
+                        </div>
                     </div>
                 </>
             )}
